@@ -14,6 +14,206 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_conversations: {
+        Row: {
+          context: Json | null
+          created_at: string | null
+          id: string
+          messages: Json
+          session_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string | null
+          id?: string
+          messages?: Json
+          session_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string | null
+          id?: string
+          messages?: Json
+          session_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      cities: {
+        Row: {
+          area_sq_km: number | null
+          avg_income: number | null
+          business_ease_score: number | null
+          created_at: string | null
+          demographics: Json | null
+          district: string | null
+          employment_rate: number | null
+          gdp_per_capita: number | null
+          id: string
+          infrastructure_score: number | null
+          internet_penetration: number | null
+          key_industries: Json | null
+          latitude: number
+          literacy_rate: number | null
+          longitude: number
+          name: string
+          pin_code: string | null
+          population: number
+          population_density: number | null
+          rent_index: number | null
+          state: string
+          tier: string | null
+          updated_at: string | null
+          urbanization_level: string | null
+        }
+        Insert: {
+          area_sq_km?: number | null
+          avg_income?: number | null
+          business_ease_score?: number | null
+          created_at?: string | null
+          demographics?: Json | null
+          district?: string | null
+          employment_rate?: number | null
+          gdp_per_capita?: number | null
+          id?: string
+          infrastructure_score?: number | null
+          internet_penetration?: number | null
+          key_industries?: Json | null
+          latitude: number
+          literacy_rate?: number | null
+          longitude: number
+          name: string
+          pin_code?: string | null
+          population: number
+          population_density?: number | null
+          rent_index?: number | null
+          state: string
+          tier?: string | null
+          updated_at?: string | null
+          urbanization_level?: string | null
+        }
+        Update: {
+          area_sq_km?: number | null
+          avg_income?: number | null
+          business_ease_score?: number | null
+          created_at?: string | null
+          demographics?: Json | null
+          district?: string | null
+          employment_rate?: number | null
+          gdp_per_capita?: number | null
+          id?: string
+          infrastructure_score?: number | null
+          internet_penetration?: number | null
+          key_industries?: Json | null
+          latitude?: number
+          literacy_rate?: number | null
+          longitude?: number
+          name?: string
+          pin_code?: string | null
+          population?: number
+          population_density?: number | null
+          rent_index?: number | null
+          state?: string
+          tier?: string | null
+          updated_at?: string | null
+          urbanization_level?: string | null
+        }
+        Relationships: []
+      }
+      custom_ideas: {
+        Row: {
+          analysis_result: Json | null
+          biz_score: number | null
+          category: string | null
+          city_id: string | null
+          coordinates: Json | null
+          created_at: string | null
+          id: string
+          idea_text: string
+          location: string | null
+          niche: string | null
+          parsed_data: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          analysis_result?: Json | null
+          biz_score?: number | null
+          category?: string | null
+          city_id?: string | null
+          coordinates?: Json | null
+          created_at?: string | null
+          id?: string
+          idea_text: string
+          location?: string | null
+          niche?: string | null
+          parsed_data?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          analysis_result?: Json | null
+          biz_score?: number | null
+          category?: string | null
+          city_id?: string | null
+          coordinates?: Json | null
+          created_at?: string | null
+          id?: string
+          idea_text?: string
+          location?: string | null
+          niche?: string | null
+          parsed_data?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_ideas_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      idea_comparisons: {
+        Row: {
+          created_at: string | null
+          id: string
+          idea_ids: Json
+          matrix_result: Json | null
+          name: string
+          updated_at: string | null
+          user_id: string
+          weights: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          idea_ids: Json
+          matrix_result?: Json | null
+          name: string
+          updated_at?: string | null
+          user_id: string
+          weights?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          idea_ids?: Json
+          matrix_result?: Json | null
+          name?: string
+          updated_at?: string | null
+          user_id?: string
+          weights?: Json | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

@@ -15,6 +15,8 @@ const Navigation = () => {
   const navLinks = [
     { name: "Home", path: "/" },
     { name: "Opportunities", path: "/opportunities" },
+    { name: "Idea Analyzer", path: "/idea-analyzer" },
+    { name: "Compare", path: "/compare" },
     { name: "About", path: "/about" },
     { name: "Contact", path: "/contact" },
   ];

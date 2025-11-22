@@ -12,6 +12,7 @@ import Contact from "./pages/Contact";
 import Auth from "./pages/Auth";
 import SavedIdeas from "./pages/SavedIdeas";
 import Compare from "./pages/Compare";
+import IdeaAnalyzer from "./pages/IdeaAnalyzer";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/saved" element={<SavedIdeas />} />
             <Route path="/compare" element={<Compare />} />
+            <Route path="/idea-analyzer" element={<IdeaAnalyzer />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

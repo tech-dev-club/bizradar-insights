@@ -11,13 +11,13 @@ import { analyzeBusinessIdea } from "@/lib/ideaEngine";
 import { buildFullReport } from "@/lib/reportBuilder";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { getCityCoordinates } from "@/services/geocoding";
 
 const IdeaAnalyzer = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [ideaText, setIdeaText] = useState("");
   const [location, setLocation] = useState("");
-  const [pinCode, setPinCode] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const handleAnalyze = async () => {
@@ -26,8 +26,8 @@ const IdeaAnalyzer = () => {
       return;
     }
 
-    if (!location.trim() && !pinCode.trim()) {
-      toast.error("Please provide a location or PIN code");
+    if (!location.trim()) {
+      toast.error("Please provide a location");
       return;
     }
 
@@ -44,9 +44,15 @@ const IdeaAnalyzer = () => {
       toast.info("Analyzing your business idea...");
       const analysis = await analyzeBusinessIdea(ideaText);
 
-      // Get location data (mock for now - will be replaced with real API)
-      const coordinates = { lat: 28.6139, lng: 77.2090 }; // Default to Delhi
-      const populationDensity = 11000;
+      // Get real location coordinates
+      const locationData = getCityCoordinates(location);
+      if (!locationData) {
+        toast.error("Location not found. Please enter a valid Indian city.");
+        return;
+      }
+      
+      const coordinates = { lat: locationData.lat, lng: locationData.lng };
+      const populationDensity = locationData.population ? Math.floor(locationData.population / 100) : 11000;
 
       // Map competition level to density
       const competitionDensityMap = {
@@ -57,7 +63,7 @@ const IdeaAnalyzer = () => {
 
       // Build full feasibility report
       const report = buildFullReport({
-        location: location || `PIN: ${pinCode}`,
+        location: locationData.formattedAddress,
         category: analysis.parsed.category,
         coordinates,
         demandIndex: analysis.demandEstimate,
@@ -75,7 +81,7 @@ const IdeaAnalyzer = () => {
           parsed_data: analysis.parsed as any,
           category: analysis.parsed.category,
           niche: analysis.parsed.niche,
-          location: location || `PIN: ${pinCode}`,
+          location: locationData.formattedAddress,
           coordinates: coordinates as any,
           analysis_result: report as any,
           biz_score: report.bizScoreToday
@@ -138,30 +144,18 @@ const IdeaAnalyzer = () => {
                 />
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="location">
-                    <MapPin className="inline h-4 w-4 mr-1" />
-                    City/Location
-                  </Label>
-                  <Input
-                    id="location"
-                    placeholder="e.g., Mumbai, Bangalore"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    className="mt-2"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="pincode">PIN Code (Optional)</Label>
-                  <Input
-                    id="pincode"
-                    placeholder="e.g., 400001"
-                    value={pinCode}
-                    onChange={(e) => setPinCode(e.target.value)}
-                    className="mt-2"
-                  />
-                </div>
+              <div>
+                <Label htmlFor="location">
+                  <MapPin className="inline h-4 w-4 mr-1" />
+                  City/Location
+                </Label>
+                <Input
+                  id="location"
+                  placeholder="e.g., Mumbai, Bangalore, Delhi"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="mt-2"
+                />
               </div>
 
               <Button

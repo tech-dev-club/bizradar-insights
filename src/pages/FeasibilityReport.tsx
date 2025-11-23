@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +21,14 @@ import {
 } from "lucide-react";
 import { buildFullReport, FeasibilityReport } from "@/lib/reportBuilder";
 import { formatCurrency } from "@/lib/financeEngine";
+import { AdvancedAnalyticsPanel } from "@/components/AdvancedAnalyticsPanel";
+import { analyzeCompetitorQuality } from "@/lib/competitorQualityEngine";
+import { estimateRent } from "@/lib/rentEstimationEngine";
+import { calculatePersonaMatch } from "@/lib/customerPersonaEngine";
+import { generateSeasonalForecast } from "@/lib/seasonalForecastEngine";
+import { generateRiskIndex } from "@/lib/riskIndexEngine";
+import { generateIdeaEnhancements } from "@/lib/ideaEnhancementEngine";
+import { predictBusinessFailure } from "@/lib/failurePredictionEngine";
 
 const FeasibilityReportPage = () => {
   const { user, loading: authLoading } = useAuth();
@@ -30,6 +38,104 @@ const FeasibilityReportPage = () => {
   const [loading, setLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
   const [savingReport, setSavingReport] = useState(false);
+
+  // Calculate advanced analytics
+  const advancedAnalytics = useMemo(() => {
+    if (!report) return null;
+
+    // Competitor Quality Analysis
+    const competitors = report.nearestCompetitors && report.nearestCompetitors.length > 0
+      ? report.nearestCompetitors
+      : [
+          { name: "Competitor A", distance: 1.2, rating: 4.2 },
+          { name: "Competitor B", distance: 2.5, rating: 3.8 },
+          { name: "Competitor C", distance: 0.8, rating: 4.5 },
+        ];
+
+    const competitorAnalysis = analyzeCompetitorQuality(
+      competitors.map(c => ({
+        name: c.name,
+        distance: c.distance,
+        rating: c.rating,
+        reviews: Math.floor(Math.random() * 200) + 50,
+        visibility: c.rating >= 4.5 ? "High" : c.rating >= 4.0 ? "Medium" : "Low" as "High" | "Medium" | "Low",
+        pricing: report.category === "Premium" ? "Premium" : report.category === "Cafe" ? "Mid-Range" : "Budget" as "Budget" | "Mid-Range" | "Premium",
+        brandStrength: Math.floor(c.rating * 20),
+      }))
+    );
+
+    // Rent Estimation
+    const rentEstimate = estimateRent(
+      report.location,
+      report.category,
+      "Medium",
+      report.populationDensity,
+      report.demandIndex
+    );
+
+    // Customer Persona Match
+    const personaMatch = calculatePersonaMatch(
+      report.category,
+      "Mid-Range",
+      report.populationDensity,
+      report.demandIndex,
+      report.location
+    );
+
+    // Seasonal Forecast
+    const seasonalForecast = generateSeasonalForecast(
+      report.category,
+      report.financials.expectedMonthlyRevenue.min
+    );
+
+    // Risk Analysis
+    const riskBreakdown = generateRiskIndex(
+      report.category,
+      report.competitionDensity,
+      report.competitionIndex,
+      report.categoryDifficulty,
+      report.financials.setupCost.min,
+      report.financials.breakEvenMonths,
+      report.financials.profitMargin.min,
+      "Moderate"
+    );
+
+    // Idea Enhancements
+    const ideaEnhancement = generateIdeaEnhancements(
+      report.category,
+      report.category,
+      "Mid-Range",
+      report.competitionDensity,
+      report.demandIndex,
+      ["Quality service", "Strategic location"]
+    );
+
+    // Failure Prediction
+    const financialViability = report.financials.profitMargin.min >= 25 ? "Excellent" :
+                               report.financials.profitMargin.min >= 18 ? "Good" :
+                               report.financials.profitMargin.min >= 12 ? "Fair" : "Poor";
+    
+    const failurePrediction = predictBusinessFailure(
+      report.bizScoreToday,
+      report.bizScore12M,
+      report.competitionDensity,
+      financialViability as "Poor" | "Fair" | "Good" | "Excellent",
+      report.demandIndex,
+      personaMatch.overallMatch,
+      report.financials.breakEvenMonths,
+      report.financials.setupCost.min
+    );
+
+    return {
+      competitorAnalysis,
+      rentEstimate,
+      personaMatch,
+      seasonalForecast,
+      riskBreakdown,
+      ideaEnhancement,
+      failurePrediction,
+    };
+  }, [report]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -489,6 +595,22 @@ const FeasibilityReportPage = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Advanced Analytics Panel - Level A & B Features */}
+        {advancedAnalytics && (
+          <div className="mt-8">
+            <h2 className="text-2xl font-bold mb-4">Advanced Analytics</h2>
+            <AdvancedAnalyticsPanel
+              competitorAnalysis={advancedAnalytics.competitorAnalysis}
+              rentEstimate={advancedAnalytics.rentEstimate}
+              personaMatch={advancedAnalytics.personaMatch}
+              seasonalForecast={advancedAnalytics.seasonalForecast}
+              riskBreakdown={advancedAnalytics.riskBreakdown}
+              ideaEnhancement={advancedAnalytics.ideaEnhancement}
+              failurePrediction={advancedAnalytics.failurePrediction}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

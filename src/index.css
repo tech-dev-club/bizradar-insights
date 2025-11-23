@@ -8,6 +8,63 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
+    /* BizRadar Light Professional Theme */
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 189 95% 43%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 271 81% 63%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 271 81% 63%;
+    --accent-foreground: 0 0% 100%;
+
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 189 95% 43%;
+
+    --radius: 0.75rem;
+
+    /* BizRadar Brand Colors */
+    --bizradar-cyan: 189 95% 43%;
+    --bizradar-cyan-glow: 189 95% 53%;
+    --bizradar-purple: 271 81% 63%;
+    --bizradar-purple-glow: 271 81% 73%;
+    --bizradar-dark: 222 47% 7%;
+    --bizradar-card: 222 40% 10%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(189 95% 43%), hsl(271 81% 63%));
+    --gradient-hero: linear-gradient(135deg, hsl(189 95% 43% / 0.2), hsl(271 81% 63% / 0.2));
+    --gradient-glow: radial-gradient(circle at 50% 50%, hsl(189 95% 43% / 0.15), transparent 70%);
+
+    /* Shadows & Effects */
+    --shadow-glow-cyan: 0 0 40px hsl(189 95% 43% / 0.15);
+    --shadow-glow-purple: 0 0 40px hsl(271 81% 63% / 0.15);
+    --shadow-card: 0 8px 32px hsl(222 47% 7% / 0.08);
+  }
+
+  .dark {
     /* BizRadar Dark Professional Theme */
     --background: 222 47% 7%;
     --foreground: 210 40% 98%;
@@ -42,21 +99,6 @@ All colors MUST be HSL.
     --border: 222 40% 20%;
     --input: 222 40% 15%;
     --ring: 189 95% 43%;
-
-    --radius: 0.75rem;
-
-    /* BizRadar Brand Colors */
-    --bizradar-cyan: 189 95% 43%;
-    --bizradar-cyan-glow: 189 95% 53%;
-    --bizradar-purple: 271 81% 63%;
-    --bizradar-purple-glow: 271 81% 73%;
-    --bizradar-dark: 222 47% 7%;
-    --bizradar-card: 222 40% 10%;
-
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(189 95% 43%), hsl(271 81% 63%));
-    --gradient-hero: linear-gradient(135deg, hsl(189 95% 43% / 0.2), hsl(271 81% 63% / 0.2));
-    --gradient-glow: radial-gradient(circle at 50% 50%, hsl(189 95% 43% / 0.15), transparent 70%);
 
     /* Shadows & Effects */
     --shadow-glow-cyan: 0 0 40px hsl(189 95% 43% / 0.3);

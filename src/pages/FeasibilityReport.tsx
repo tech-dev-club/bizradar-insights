@@ -44,9 +44,33 @@ const FeasibilityReportPage = () => {
   }, [user, searchParams]);
 
   const generateReport = async () => {
+    const ideaId = searchParams.get("ideaId");
     const location = searchParams.get("city") || "";
     const category = searchParams.get("category") || "";
     const currentScore = parseInt(searchParams.get("score") || "50");
+
+    // If ideaId is provided, load from database
+    if (ideaId) {
+      try {
+        const { data: ideaData, error } = await supabase
+          .from('custom_ideas')
+          .select('*')
+          .eq('id', ideaId)
+          .single();
+
+        if (error) throw error;
+
+        if (ideaData?.analysis_result) {
+          setReport(ideaData.analysis_result as any as FeasibilityReport);
+          setLoading(false);
+          return;
+        }
+      } catch (error: any) {
+        toast.error("Failed to load idea: " + error.message);
+        navigate("/opportunities");
+        return;
+      }
+    }
 
     if (!location || !category) {
       toast.error("Missing location or category information");

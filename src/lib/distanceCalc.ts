@@ -15,6 +15,18 @@ export interface Coordinates {
  * @returns Distance in kilometers
  */
 export function calculateDistance(coord1: Coordinates, coord2: Coordinates): number {
+  const isValidCoordinate = (coordinate: Coordinates) =>
+    Number.isFinite(coordinate?.lat) &&
+    Number.isFinite(coordinate?.lng) &&
+    coordinate.lat >= -90 &&
+    coordinate.lat <= 90 &&
+    coordinate.lng >= -180 &&
+    coordinate.lng <= 180;
+
+  if (!isValidCoordinate(coord1) || !isValidCoordinate(coord2)) {
+    return Number.POSITIVE_INFINITY;
+  }
+
   const R = 6371; // Earth's radius in kilometers
   const dLat = toRadians(coord2.lat - coord1.lat);
   const dLng = toRadians(coord2.lng - coord1.lng);
@@ -44,6 +56,10 @@ function toRadians(degrees: number): number {
  * @returns Formatted string with appropriate unit
  */
 export function formatDistance(distanceKm: number): string {
+  if (!Number.isFinite(distanceKm) || distanceKm < 0) {
+    return "N/A";
+  }
+
   if (distanceKm < 1) {
     return `${Math.round(distanceKm * 1000)}m`;
   }

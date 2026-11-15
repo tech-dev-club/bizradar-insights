@@ -22,67 +22,63 @@ export interface NominatimResult {
 }
 
 /**
- * Search locations using OpenStreetMap Nominatim API
- * Returns matching locations worldwide
+ * Search locations using OpenStreetMap Nominatim API.
+ * Returns matching locations worldwide.
  */
 export const searchLocations = async (query: string): Promise<LocationData[]> => {
-  if (!query || query.length < 2) return [];
-  
+  const normalizedQuery = query.trim();
+  if (normalizedQuery.length < 2) return [];
+
   try {
     const response = await fetch(
       `https://nominatim.openstreetmap.org/search?` +
-      `q=${encodeURIComponent(query)}&` +
-      `format=json&` +
-      `limit=5&` +
-      `addressdetails=1`,
+        `q=${encodeURIComponent(normalizedQuery)}&` +
+        `format=json&` +
+        `limit=5&` +
+        `addressdetails=1`,
       {
         headers: {
-          'User-Agent': 'BizRadar/1.0'
-        }
-      }
+          "User-Agent": "BizRadar/1.0",
+        },
+      },
     );
-    
+
     if (!response.ok) throw new Error("Geocoding failed");
-    
+
     const data: NominatimResult[] = await response.json();
-    
-    return data.map(result => ({
+
+    return data.map((result) => ({
       name: result.name,
-      lat: parseFloat(result.lat),
-      lng: parseFloat(result.lon),
+      lat: Number.parseFloat(result.lat),
+      lng: Number.parseFloat(result.lon),
       formattedAddress: result.display_name,
       state: extractState(result.display_name),
     }));
   } catch (error) {
     console.error("Geocoding error:", error);
-    // Fallback to local Indian cities
-    return searchIndianCities(query);
+    // Keep the local fallback useful when the external provider is unavailable.
+    return searchIndianCities(normalizedQuery);
   }
 };
 
-/**
- * Extract state/region from display name
- */
+/** Extract state/region from a formatted address. */
 const extractState = (displayName: string): string | undefined => {
-  const parts = displayName.split(', ');
+  const parts = displayName.split(", ");
   return parts.length > 1 ? parts[parts.length - 2] : undefined;
 };
 
-/**
- * Search for Indian cities by name (fallback)
- * Returns matching cities from our database
- */
+/** Search the bundled Indian city list by city or state name. */
 export const searchIndianCities = (query: string): LocationData[] => {
-  if (!query || query.length < 2) return [];
-  
-  const searchTerm = query.toLowerCase();
+  const searchTerm = query.trim().toLocaleLowerCase();
+  if (searchTerm.length < 2) return [];
+
   return INDIAN_CITIES
-    .filter(city => 
-      city.name.toLowerCase().includes(searchTerm) || 
-      city.state.toLowerCase().includes(searchTerm)
+    .filter((city) =>
+      city.name.toLocaleLowerCase().includes(searchTerm) ||
+      city.state.toLocaleLowerCase().includes(searchTerm),
     )
     .slice(0, 5)
-    .map(city => ({
+    .map((city) => ({
       name: city.name,
       state: city.state,
       lat: city.lat,
@@ -93,22 +89,21 @@ export const searchIndianCities = (query: string): LocationData[] => {
 };
 
 /**
- * Get coordinates for a specific city
- * Handles both simple city names and formatted addresses
+ * Get coordinates for a specific city.
+ * Handles both simple city names and formatted addresses.
  */
 export const getCityCoordinates = (cityNameOrAddress: string): LocationData | null => {
-  // Extract city name from formatted address (e.g., "Mumbai, Maharashtra, India" -> "Mumbai")
-  const cityName = cityNameOrAddress.split(',')[0].trim();
-  
+  const cityName = cityNameOrAddress.split(",")[0].trim();
+
   const city = INDIAN_CITIES.find(
-    c => c.name.toLowerCase() === cityName.toLowerCase()
+    (candidate) => candidate.name.toLocaleLowerCase() === cityName.toLocaleLowerCase(),
   );
-  
+
   if (!city) {
     console.warn(`City not found: ${cityName}`);
     return null;
   }
-  
+
   return {
     name: city.name,
     state: city.state,
@@ -119,31 +114,20 @@ export const getCityCoordinates = (cityNameOrAddress: string): LocationData | nu
   };
 };
 
-/**
- * Parse PIN code format (basic validation)
- * Note: Real PIN code to location would require external API
- */
+/** Validate the six-digit Indian PIN-code format. */
 export const parsePinCode = (pinCode: string): boolean => {
-  const pinRegex = /^[1-9][0-9]{5}$/;
-  return pinRegex.test(pinCode);
+  return /^[1-9][0-9]{5}$/.test(pinCode.trim());
 };
 
 /**
- * Get city by PIN code (mock implementation)
- * In production, use India Post API or similar service
+ * Resolve a PIN code to a city.
+ *
+ * No PIN-code dataset or external lookup provider is currently configured.
+ * Return null rather than inventing a city for a valid-looking PIN.
  */
-export const getCityByPinCode = async (pinCode: string): Promise<LocationData | null> => {
+export const getCityByPinCode = async (
+  pinCode: string,
+): Promise<LocationData | null> => {
   if (!parsePinCode(pinCode)) return null;
-  
-  // Mock: Return a random Indian city (replace with real API in production)
-  const randomCity = INDIAN_CITIES[Math.floor(Math.random() * INDIAN_CITIES.length)];
-  
-  return {
-    name: randomCity.name,
-    state: randomCity.state,
-    lat: randomCity.lat,
-    lng: randomCity.lng,
-    population: randomCity.population,
-    formattedAddress: `${randomCity.name}, ${randomCity.state}, India (PIN: ${pinCode})`,
-  };
+  return null;
 };

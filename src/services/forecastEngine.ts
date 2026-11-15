@@ -29,7 +29,22 @@ export const generateForecast = (
     "health-wellness": 0.20,
   };
 
-  const annualGrowthRate = categoryGrowthRates[category] || 0.12;
+  const categoryKey = Object.keys(categoryGrowthRates).find(
+    (key) => key.toLowerCase() === category.trim().toLowerCase(),
+  );
+  const annualGrowthRate = categoryKey ? categoryGrowthRates[categoryKey] : 0.12;
+  const safeDemandIndex = Number.isFinite(marketData.demandIndex)
+    ? Math.min(100, Math.max(0, marketData.demandIndex))
+    : 0;
+  const safeCompetitionIndex = Number.isFinite(marketData.competitionIndex)
+    ? Math.min(100, Math.max(0, marketData.competitionIndex))
+    : 0;
+  const safePopulationDensity = Number.isFinite(marketData.populationDensity)
+    ? Math.max(0, marketData.populationDensity)
+    : 0;
+  const safeCurrentBizScore = Number.isFinite(currentBizScore)
+    ? Math.min(100, Math.max(0, currentBizScore))
+    : 0;
 
   // Calculate 6-month and 12-month growth factors
   const growth6M = 1 + (annualGrowthRate * 0.5);
@@ -40,12 +55,12 @@ export const generateForecast = (
   const competitionGrowth12M = 1 + (annualGrowthRate * 0.6);
 
   // Project demand
-  const demandIndex6M = Math.min(100, Math.round(marketData.demandIndex * growth6M));
-  const demandIndex12M = Math.min(100, Math.round(marketData.demandIndex * growth12M));
+  const demandIndex6M = Math.min(100, Math.round(safeDemandIndex * growth6M));
+  const demandIndex12M = Math.min(100, Math.round(safeDemandIndex * growth12M));
 
   // Project competition
-  const competitionIndex6M = Math.min(100, Math.round(marketData.competitionIndex * competitionGrowth6M));
-  const competitionIndex12M = Math.min(100, Math.round(marketData.competitionIndex * competitionGrowth12M));
+  const competitionIndex6M = Math.min(100, Math.round(safeCompetitionIndex * competitionGrowth6M));
+  const competitionIndex12M = Math.min(100, Math.round(safeCompetitionIndex * competitionGrowth12M));
 
   // Calculate future BizScores using enhanced formula
   const calculateFutureBizScore = (demand: number, competition: number, density: number) => {
@@ -62,12 +77,12 @@ export const generateForecast = (
     );
   };
 
-  const bizScore6M = calculateFutureBizScore(demandIndex6M, competitionIndex6M, marketData.populationDensity);
-  const bizScore12M = calculateFutureBizScore(demandIndex12M, competitionIndex12M, marketData.populationDensity);
+  const bizScore6M = calculateFutureBizScore(demandIndex6M, competitionIndex6M, safePopulationDensity);
+  const bizScore12M = calculateFutureBizScore(demandIndex12M, competitionIndex12M, safePopulationDensity);
 
   // Determine trend direction
   let trendDirection: "growing" | "flat" | "declining";
-  const scoreDiff = bizScore12M - currentBizScore;
+  const scoreDiff = bizScore12M - safeCurrentBizScore;
   
   if (scoreDiff > 5) {
     trendDirection = "growing";

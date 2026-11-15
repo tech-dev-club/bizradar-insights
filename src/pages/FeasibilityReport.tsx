@@ -43,26 +43,29 @@ const FeasibilityReportPage = () => {
   const advancedAnalytics = useMemo(() => {
     if (!report) return null;
 
-    // Competitor Quality Analysis
-    const competitors = report.nearestCompetitors && report.nearestCompetitors.length > 0
-      ? report.nearestCompetitors
-      : [
-          { name: "Competitor A", distance: 1.2, rating: 4.2 },
-          { name: "Competitor B", distance: 2.5, rating: 3.8 },
-          { name: "Competitor C", distance: 0.8, rating: 4.5 },
-        ];
-
-    const competitorAnalysis = analyzeCompetitorQuality(
-      competitors.map(c => ({
-        name: c.name,
-        distance: c.distance,
-        rating: c.rating,
-        reviews: Math.floor(Math.random() * 200) + 50,
-        visibility: c.rating >= 4.5 ? "High" : c.rating >= 4.0 ? "Medium" : "Low" as "High" | "Medium" | "Low",
-        pricing: report.category === "Premium" ? "Premium" : report.category === "Cafe" ? "Mid-Range" : "Budget" as "Budget" | "Mid-Range" | "Premium",
-        brandStrength: Math.floor(c.rating * 20),
-      }))
-    );
+    // Only show competitor quality analysis when the report contains competitor records.
+    // Do not invent sample businesses and present them as local market observations.
+    const competitorAnalysis = report.nearestCompetitors?.length
+      ? analyzeCompetitorQuality(
+          report.nearestCompetitors.map((competitor) => ({
+            name: competitor.name,
+            distance: competitor.distance,
+            rating: competitor.rating,
+            reviews: 0,
+            visibility: competitor.rating >= 4.5
+              ? "High"
+              : competitor.rating >= 4.0
+                ? "Medium"
+                : "Low",
+            pricing: report.category === "Premium"
+              ? "Premium"
+              : report.category === "Cafe"
+                ? "Mid-Range"
+                : "Budget",
+            brandStrength: Math.round(competitor.rating * 20),
+          })),
+        )
+      : undefined;
 
     // Rent Estimation
     const rentEstimate = estimateRent(

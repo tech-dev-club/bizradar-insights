@@ -33,7 +33,21 @@ const Compare = () => {
   }, [user, searchParams]);
 
   const loadComparison = async () => {
-    const ids = searchParams.get("ids")?.split(",") || [];
+    const ids = Array.from(
+      new Set(
+        (searchParams.get("ids") || "")
+          .split(",")
+          .map((id) => id.trim())
+          .filter(Boolean),
+      ),
+    );
+
+    if (ids.length > 5) {
+      toast.error("You can compare up to 5 ideas at once");
+      navigate("/saved");
+      return;
+    }
+
     if (ids.length < 2) {
       toast.error("Select at least 2 ideas to compare");
       navigate("/saved");
@@ -44,6 +58,7 @@ const Compare = () => {
       const { data, error } = await supabase
         .from("saved_ideas")
         .select("*")
+        .eq("user_id", user!.id)
         .in("id", ids);
 
       if (error) throw error;
@@ -71,6 +86,14 @@ const Compare = () => {
         financials: idea.financials,
         recommendation: idea.recommendation || { type: "start-caution", label: "Start with Caution" },
       }));
+
+      if (reportsData.length !== ids.length) {
+        toast.error("One or more selected ideas are unavailable. Refresh your saved ideas and try again.");
+        setReports([]);
+        setComparisonResult(null);
+        navigate("/saved");
+        return;
+      }
 
       setReports(reportsData);
 

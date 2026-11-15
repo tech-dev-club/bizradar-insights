@@ -40,16 +40,16 @@ const IdeaAnalyzer = () => {
     setIsAnalyzing(true);
 
     try {
-      // Parse the business idea using AI
-      toast.info("Analyzing your business idea...");
-      const analysis = await analyzeBusinessIdea(ideaText);
-
-      // Get real location coordinates
-      const locationData = getCityCoordinates(location);
+      // Validate location before making an AI request.
+      const locationData = getCityCoordinates(location.trim());
       if (!locationData) {
-        toast.error("Location not found. Please enter a valid Indian city.");
+        toast.error("Location not found. Please enter a supported Indian city.");
         return;
       }
+
+      // Parse the business idea only after local validation succeeds.
+      toast.info("Analyzing your business idea...");
+      const analysis = await analyzeBusinessIdea(ideaText.trim());
       
       const coordinates = { lat: locationData.lat, lng: locationData.lng };
       const populationDensity = locationData.population ? Math.floor(locationData.population / 100) : 11000;
@@ -77,7 +77,7 @@ const IdeaAnalyzer = () => {
         .from('custom_ideas')
         .insert([{
           user_id: user.id,
-          idea_text: ideaText,
+          idea_text: ideaText.trim(),
           parsed_data: analysis.parsed as any,
           category: analysis.parsed.category,
           niche: analysis.parsed.niche,
@@ -136,12 +136,21 @@ const IdeaAnalyzer = () => {
                 <Label htmlFor="idea">Business Idea</Label>
                 <Textarea
                   id="idea"
+                  maxLength={2000}
                   placeholder="Example: I want to start a Korean themed fusion cafe with affordable pricing targeting students and young professionals. The cafe will serve fusion dishes combining Korean flavors with local cuisine, have free WiFi, and stay open until midnight to cater to late-night study groups and remote workers..."
                   value={ideaText}
                   onChange={(e) => setIdeaText(e.target.value)}
                   rows={8}
                   className="mt-2"
+                  aria-describedby="idea-character-count"
                 />
+                <div
+                  id="idea-character-count"
+                  className="mt-1 text-right text-xs text-muted-foreground"
+                  aria-live="polite"
+                >
+                  {ideaText.length.toLocaleString()} / 2,000 characters
+                </div>
               </div>
 
               <div>
@@ -160,7 +169,7 @@ const IdeaAnalyzer = () => {
 
               <Button
                 onClick={handleAnalyze}
-                disabled={isAnalyzing}
+                disabled={isAnalyzing || !ideaText.trim() || ideaText.trim().length > 2000 || !location.trim()}
                 size="lg"
                 className="w-full"
               >

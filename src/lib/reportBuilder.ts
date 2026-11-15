@@ -142,7 +142,16 @@ export function buildFeasibilityReport(inputs: ReportInputs): FeasibilityReport 
 
 // Generate unique report ID
 function generateReportId(): string {
-  return `report-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return `report-${crypto.randomUUID()}`;
+  }
+
+  // Fallback for runtimes that do not expose the Web Crypto UUID helper.
+  const randomPart = Array.from({ length: 4 }, () =>
+    Math.floor(Math.random() * 0x10000).toString(16).padStart(4, "0"),
+  ).join("");
+
+  return `report-${Date.now()}-${randomPart}`;
 }
 
 // Export report as JSON
@@ -189,12 +198,21 @@ export function buildFullReport(inputs: {
   populationDensity: number;
   bizScoreToday: number;
 }): FeasibilityReport {
-  // Calculate derived values
-  const forecastGrowth = inputs.bizScoreToday >= 70 ? 1.2 : inputs.bizScoreToday >= 50 ? 1.1 : 1.05;
-  const bizScore6M = Math.round(inputs.bizScoreToday * 1.05);
-  const bizScore12M = Math.round(inputs.bizScoreToday * forecastGrowth);
+  // Normalize report inputs before deriving dependent metrics.
+  const safeBizScore = Math.min(100, Math.max(0, Number.isFinite(inputs.bizScoreToday) ? inputs.bizScoreToday : 0));
+  const safeDemandIndex = Math.min(100, Math.max(0, Number.isFinite(inputs.demandIndex) ? inputs.demandIndex : 0));
+  const safePopulationDensity = Math.max(0, Number.isFinite(inputs.populationDensity) ? inputs.populationDensity : 0);
+  const forecastGrowth = safeBizScore >= 70 ? 1.2 : safeBizScore >= 50 ? 1.1 : 1.05;
+  const bizScore6M = Math.min(100, Math.round(safeBizScore * 1.05));
+  const bizScore12M = Math.min(100, Math.round(safeBizScore * forecastGrowth));
   const trendDirection: "growing" | "stable" | "declining" = forecastGrowth > 1.1 ? "growing" : "stable";
-  const competitionIndex = 100 - inputs.demandIndex;
+  const competitionIndexByDensity = {
+    Low: 20,
+    Balanced: 45,
+    High: 70,
+    Oversaturated: 90,
+  };
+  const competitionIndex = competitionIndexByDensity[inputs.competitionDensity];
   
   // Determine category difficulty based on category
   const categoryDifficulty: "Easy" | "Moderate" | "Difficult" | "Very Difficult" = 
@@ -203,6 +221,9 @@ export function buildFullReport(inputs: {
 
   const fullInputs: ReportInputs = {
     ...inputs,
+    demandIndex: safeDemandIndex,
+    populationDensity: safePopulationDensity,
+    bizScoreToday: safeBizScore,
     competitionIndex,
     categoryDifficulty,
     bizScore6M,

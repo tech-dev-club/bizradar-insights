@@ -96,15 +96,19 @@ export function calculatePersonaMatch(
   location: string
 ): PersonaMatch {
   const primaryPersona = generatePersona(category, pricingLevel);
-  
+  const safePopulationDensity = Number.isFinite(populationDensity) ? Math.max(0, populationDensity) : 0;
+  const safeDemandIndex = Number.isFinite(demandIndex) ? Math.min(100, Math.max(0, demandIndex)) : 0;
+  const normalizedLocation = (typeof location === "string" ? location : "").toLowerCase();
+  const normalizedCategory = category.toLowerCase();
+
   // Estimate demographics
-  const youthDensity = populationDensity > 100 ? 45 : populationDensity > 50 ? 35 : 25;
+  const youthDensity = safePopulationDensity > 100 ? 45 : safePopulationDensity > 50 ? 35 : 25;
   
   // Income alignment
   let incomeAlignment: "Excellent" | "Good" | "Fair" | "Poor";
-  if (primaryPersona.incomeLevel === "High" && populationDensity > 100) {
+  if (primaryPersona.incomeLevel === "High" && safePopulationDensity > 100) {
     incomeAlignment = "Excellent";
-  } else if (primaryPersona.incomeLevel === "Middle" && populationDensity > 30) {
+  } else if (primaryPersona.incomeLevel === "Middle" && safePopulationDensity > 30) {
     incomeAlignment = "Good";
   } else if (primaryPersona.incomeLevel === "Upper-Middle") {
     incomeAlignment = "Good";
@@ -113,15 +117,15 @@ export function calculatePersonaMatch(
   }
 
   // Lifestyle match
-  const lifestyleMatch = demandIndex >= 70 ? "Strong" : demandIndex >= 50 ? "Moderate" : "Weak";
+  const lifestyleMatch = safeDemandIndex >= 70 ? "Strong" : safeDemandIndex >= 50 ? "Moderate" : "Weak";
 
   // Zone type determination
   let zoneType: "Residential" | "Commercial" | "Mixed" | "Industrial";
-  if (location.includes("Market") || location.includes("Mall")) {
+  if (normalizedLocation.includes("market") || normalizedLocation.includes("mall")) {
     zoneType = "Commercial";
-  } else if (populationDensity > 80) {
+  } else if (safePopulationDensity > 80) {
     zoneType = "Mixed";
-  } else if (populationDensity > 40) {
+  } else if (safePopulationDensity > 40) {
     zoneType = "Residential";
   } else {
     zoneType = "Industrial";
@@ -158,7 +162,7 @@ export function calculatePersonaMatch(
     warnings.push("Premium pricing may not align with local income levels");
   }
 
-  if (youthDensity < 20 && category === "Cafe") {
+  if (youthDensity < 20 && normalizedCategory === "cafe") {
     warnings.push("Low youth density - cafe concept may face challenges");
   }
 

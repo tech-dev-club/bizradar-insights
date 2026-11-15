@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Navigation from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -62,6 +62,39 @@ const Opportunities = () => {
     setShowResults(true);
   };
 
+
+  const competitionAnalysis = useMemo(() => {
+    if (!selectedLocation || !selectedCategory) return null;
+    return scanCompetition(
+      { lat: selectedLocation.lat, lng: selectedLocation.lng },
+      selectedCategory,
+      3,
+    );
+  }, [selectedLocation, selectedCategory]);
+
+  const categoryIntelligence = useMemo(() => {
+    return selectedCategory ? getCategoryIntelligence(selectedCategory) : null;
+  }, [selectedCategory]);
+
+  const trendData = useMemo(() => {
+    if (!marketData || !selectedCategory) return null;
+    return generateHistoricalTrends(
+      marketData.demandIndex,
+      marketData.competitionIndex,
+      selectedCategory,
+    );
+  }, [marketData, selectedCategory]);
+
+  const bizScoreData = useMemo(() => {
+    if (!marketData || !competitionAnalysis || !categoryIntelligence) return null;
+    return calculateBizScore(
+      marketData,
+      selectedCategory,
+      0,
+      competitionAnalysis.densityScore,
+      categoryIntelligence.categoryEaseScore,
+    );
+  }, [marketData, selectedCategory, competitionAnalysis, categoryIntelligence]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -181,25 +214,10 @@ const Opportunities = () => {
                 
                 <div className="grid gap-8">
                   {opportunities.map((opp, index) => {
-                    const competitionAnalysis = scanCompetition(
-                      { lat: selectedLocation!.lat, lng: selectedLocation!.lng },
-                      selectedCategory,
-                      3
-                    );
-                    const categoryIntelligence = getCategoryIntelligence(selectedCategory);
-                    const bizScoreData = calculateBizScore(
-                      marketData, 
-                      selectedCategory, 
-                      0,
-                      competitionAnalysis.densityScore,
-                      categoryIntelligence.categoryEaseScore
-                    );
+                    if (!competitionAnalysis || !categoryIntelligence || !trendData || !bizScoreData || !selectedLocation) {
+                      return null;
+                    }
                     const forecast = generateForecast(marketData, selectedCategory, opp.bizScore);
-                    const trendData = generateHistoricalTrends(
-                      marketData.demandIndex,
-                      marketData.competitionIndex,
-                      selectedCategory
-                    );
                     const scoreRating = getScoreRating(opp.bizScore);
 
                     return (

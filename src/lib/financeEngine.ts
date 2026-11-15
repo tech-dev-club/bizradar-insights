@@ -115,9 +115,9 @@ export function generateFinancialProjection(inputs: FinancialInputs): FinancialP
   const avgOperatingCost = (operatingCostMin + operatingCostMax) / 2;
   const monthlyProfit = avgRevenue - avgOperatingCost;
   
-  const breakEvenMonths = monthlyProfit > 0 
-    ? Math.ceil(avgSetupCost / monthlyProfit)
-    : 36; // Cap at 3 years if not profitable
+  const breakEvenMonths = monthlyProfit > 0
+    ? Math.min(36, Math.ceil(avgSetupCost / monthlyProfit))
+    : 36; // Cap at the three-year planning horizon
 
   // Profit margin calculation
   const profitMarginMin = Math.max(5, Math.round(((baseRevenueMin - operatingCostMax) / baseRevenueMin) * 100));

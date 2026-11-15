@@ -136,12 +136,21 @@ const IdeaAnalyzer = () => {
                 <Label htmlFor="idea">Business Idea</Label>
                 <Textarea
                   id="idea"
+                  maxLength={2000}
                   placeholder="Example: I want to start a Korean themed fusion cafe with affordable pricing targeting students and young professionals. The cafe will serve fusion dishes combining Korean flavors with local cuisine, have free WiFi, and stay open until midnight to cater to late-night study groups and remote workers..."
                   value={ideaText}
                   onChange={(e) => setIdeaText(e.target.value)}
                   rows={8}
                   className="mt-2"
+                  aria-describedby="idea-character-count"
                 />
+                <div
+                  id="idea-character-count"
+                  className="mt-1 text-right text-xs text-muted-foreground"
+                  aria-live="polite"
+                >
+                  {ideaText.length.toLocaleString()} / 2,000 characters
+                </div>
               </div>
 
               <div>
@@ -160,7 +169,7 @@ const IdeaAnalyzer = () => {
 
               <Button
                 onClick={handleAnalyze}
-                disabled={isAnalyzing}
+                disabled={isAnalyzing || !ideaText.trim() || ideaText.trim().length > 2000 || !location.trim()}
                 size="lg"
                 className="w-full"
               >

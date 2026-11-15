@@ -26,23 +26,30 @@ export function predictBusinessFailure(
   breakEvenMonths: number,
   setupCost: number
 ): FailurePrediction {
+  const safeBizScoreToday = Number.isFinite(bizScoreToday) ? Math.min(100, Math.max(0, bizScoreToday)) : 0;
+  const safeBizScore12M = Number.isFinite(bizScore12M) ? Math.min(100, Math.max(0, bizScore12M)) : safeBizScoreToday;
+  const safeDemandMatch = Number.isFinite(demandMatch) ? Math.min(100, Math.max(0, demandMatch)) : 0;
+  const safeDemographicFit = Number.isFinite(demographicFit) ? Math.min(100, Math.max(0, demographicFit)) : 0;
+  const safeBreakEvenMonths = Number.isFinite(breakEvenMonths) ? Math.max(0, breakEvenMonths) : 36;
+  const safeSetupCost = Number.isFinite(setupCost) ? Math.max(0, setupCost) : 0;
+
   let failureRisk = 0;
   const criticalWarnings: string[] = [];
   const protectiveFactors: string[] = [];
 
   // BizScore analysis (weight: 25%)
-  if (bizScoreToday < 40) {
+  if (safeBizScoreToday < 40) {
     failureRisk += 25;
     criticalWarnings.push("Current BizScore is critically low");
-  } else if (bizScoreToday < 55) {
+  } else if (safeBizScoreToday < 55) {
     failureRisk += 15;
     criticalWarnings.push("BizScore indicates challenging market conditions");
-  } else if (bizScoreToday >= 75) {
+  } else if (safeBizScoreToday >= 75) {
     protectiveFactors.push("Strong current BizScore provides buffer");
   }
 
   // Trend analysis
-  const scoreChange = bizScore12M - bizScoreToday;
+  const scoreChange = safeBizScore12M - safeBizScoreToday;
   if (scoreChange < -10) {
     failureRisk += 20;
     criticalWarnings.push("Declining market trend predicted");
@@ -77,17 +84,17 @@ export function predictBusinessFailure(
   }
 
   // Break-even risk (weight: 15%)
-  if (breakEvenMonths > 24) {
+  if (safeBreakEvenMonths > 24) {
     failureRisk += 15;
     criticalWarnings.push("Long break-even period increases cash flow risk");
-  } else if (breakEvenMonths > 18) {
+  } else if (safeBreakEvenMonths > 18) {
     failureRisk += 10;
-  } else if (breakEvenMonths <= 12) {
+  } else if (safeBreakEvenMonths <= 12) {
     protectiveFactors.push("Quick break-even reduces financial stress");
   }
 
   // Market fit (weight: 15%)
-  const marketFitScore = (demandMatch + demographicFit) / 2;
+  const marketFitScore = (safeDemandMatch + safeDemographicFit) / 2;
   if (marketFitScore < 40) {
     failureRisk += 15;
     criticalWarnings.push("Poor market-idea fit detected");
@@ -98,7 +105,7 @@ export function predictBusinessFailure(
   }
 
   // Capital risk
-  if (setupCost > 3000000 && financialViability !== "Excellent") {
+  if (safeSetupCost > 3000000 && financialViability !== "Excellent") {
     criticalWarnings.push("High capital requirement with uncertain returns");
   }
 
@@ -150,7 +157,7 @@ export function predictBusinessFailure(
     survivalRecommendations.push("Pivot positioning to better match local demographics");
   }
 
-  if (breakEvenMonths > 18) {
+  if (safeBreakEvenMonths > 18) {
     survivalRecommendations.push("Explore ways to accelerate break-even (reduce costs, increase prices)");
   }
 
@@ -162,11 +169,16 @@ export function predictBusinessFailure(
   }
 
   // Confidence level (based on data quality)
-  const confidenceLevel = Math.min(100, 
-    (bizScoreToday > 0 ? 25 : 0) +
-    (competitionDensity ? 25 : 0) +
-    (financialViability ? 25 : 0) +
-    (demandMatch > 0 ? 25 : 0)
+  const numericInputs = [
+    bizScoreToday,
+    bizScore12M,
+    demandMatch,
+    demographicFit,
+    breakEvenMonths,
+    setupCost,
+  ];
+  const confidenceLevel = Math.round(
+    (numericInputs.filter((value) => Number.isFinite(value)).length / numericInputs.length) * 100,
   );
 
   return {

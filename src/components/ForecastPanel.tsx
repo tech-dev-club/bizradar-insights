@@ -11,15 +11,23 @@ interface ForecastPanelProps {
 
 const ForecastPanel = ({ forecast, currentBizScore }: ForecastPanelProps) => {
   const trendBadge = getTrendBadge(forecast.trendDirection);
+  const trendBadgeClass = {
+    growing: "border-success text-success",
+    declining: "border-destructive text-destructive",
+    flat: "border-warning text-warning",
+  }[forecast.trendDirection];
+
+  const safeGrowthRate = Number.isFinite(forecast.growthRate) ? forecast.growthRate : 0;
+  const formattedGrowthRate = `${safeGrowthRate > 0 ? "+" : ""}${(safeGrowthRate * 100).toFixed(0)}%`;
   
   const getTrendIcon = (direction: string) => {
     switch (direction) {
       case "growing":
-        return <TrendingUp className="w-5 h-5 text-success" />;
+        return <TrendingUp className="w-5 h-5 text-success" aria-hidden="true" />;
       case "declining":
-        return <TrendingDown className="w-5 h-5 text-destructive" />;
+        return <TrendingDown className="w-5 h-5 text-destructive" aria-hidden="true" />;
       default:
-        return <Minus className="w-5 h-5 text-warning" />;
+        return <Minus className="w-5 h-5 text-warning" aria-hidden="true" />;
     }
   };
 
@@ -40,9 +48,9 @@ const ForecastPanel = ({ forecast, currentBizScore }: ForecastPanelProps) => {
           </CardTitle>
           <Badge 
             variant="outline" 
-            className={`border-${trendBadge.color}`}
+            className={trendBadgeClass}
           >
-            {trendBadge.icon} {trendBadge.label}
+            <span aria-hidden="true">{trendBadge.icon}</span> {trendBadge.label}
           </Badge>
         </div>
       </CardHeader>
@@ -98,7 +106,7 @@ const ForecastPanel = ({ forecast, currentBizScore }: ForecastPanelProps) => {
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">Annual Growth Rate</span>
             <span className="text-lg font-bold text-primary">
-              +{(forecast.growthRate * 100).toFixed(0)}%
+              {formattedGrowthRate}
             </span>
           </div>
         </div>

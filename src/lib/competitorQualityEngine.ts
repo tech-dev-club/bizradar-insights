@@ -36,14 +36,21 @@ export function calculateCompetitorQuality(
   pricing: "Budget" | "Mid-Range" | "Premium",
   distance: number
 ): number {
+  const safeRating = Number.isFinite(rating) ? Math.min(5, Math.max(0, rating)) : 0;
+  const safeReviews = Number.isFinite(reviews) ? Math.max(0, reviews) : 0;
+  const safeBrandStrength = Number.isFinite(brandStrength)
+    ? Math.min(100, Math.max(0, brandStrength))
+    : 0;
+  const safeDistance = Number.isFinite(distance) ? Math.max(0, distance) : Number.POSITIVE_INFINITY;
+
   const visibilityScore = visibility === "High" ? 30 : visibility === "Medium" ? 20 : 10;
-  const reviewScore = Math.min(30, (reviews / 100) * 30);
-  const ratingScore = (rating / 5) * 20;
-  const proximityPenalty = distance < 1 ? 10 : distance < 3 ? 5 : 0;
-  
-  return Math.round(
-    ratingScore + reviewScore + visibilityScore + (brandStrength * 0.2) + proximityPenalty
-  );
+  const reviewScore = Math.min(30, (safeReviews / 100) * 30);
+  const ratingScore = (safeRating / 5) * 20;
+  const proximityBonus = safeDistance < 1 ? 10 : safeDistance < 3 ? 5 : 0;
+
+  return Math.min(100, Math.max(0, Math.round(
+    ratingScore + reviewScore + visibilityScore + (safeBrandStrength * 0.2) + proximityBonus
+  )));
 }
 
 /**
@@ -73,9 +80,9 @@ export function analyzeCompetitorQuality(
   const qualityCompetitors: CompetitorQuality[] = competitors.map(c => {
     const qualityScore = calculateCompetitorQuality(
       c.rating,
-      c.reviews || 50,
+      c.reviews ?? 50,
       c.visibility || "Medium",
-      c.brandStrength || 50,
+      c.brandStrength ?? 50,
       c.pricing || "Mid-Range",
       c.distance
     );
@@ -84,10 +91,10 @@ export function analyzeCompetitorQuality(
       name: c.name,
       distance: c.distance,
       rating: c.rating,
-      reviews: c.reviews || 50,
+      reviews: c.reviews ?? 50,
       visibility: c.visibility || "Medium",
       pricing: c.pricing || "Mid-Range",
-      brandStrength: c.brandStrength || 50,
+      brandStrength: c.brandStrength ?? 50,
       qualityScore,
       threatLevel: getThreatLevel(qualityScore),
     };
@@ -118,9 +125,12 @@ export function analyzeCompetitorQuality(
 
   // Generate recommendations
   const recommendations: string[] = [];
-  if (strongCompetitors === 0) {
-    recommendations.push("Excellent market - no strong competitors identified");
-    recommendations.push("Focus on building brand presence quickly");
+  if (qualityCompetitors.length === 0) {
+    recommendations.push("No competitor records were provided for this analysis.");
+    recommendations.push("Add verified competitor data before drawing conclusions about market saturation.");
+  } else if (strongCompetitors === 0) {
+    recommendations.push("No strong competitors were identified in the supplied dataset.");
+    recommendations.push("Validate the competitor list before treating this as an entry opportunity.");
   } else if (strongCompetitors > 3) {
     recommendations.push("Saturated market - differentiation is critical");
     recommendations.push("Consider niche targeting or unique positioning");

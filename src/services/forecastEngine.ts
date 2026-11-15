@@ -1,5 +1,8 @@
 import { MarketData } from "./marketData";
 
+const clampIndex = (value: number, fallback = 0): number =>
+  Math.min(100, Math.max(0, Number.isFinite(value) ? value : fallback));
+
 export interface ForecastData {
   demandIndex6M: number;
   demandIndex12M: number;
@@ -29,7 +32,11 @@ export const generateForecast = (
     "health-wellness": 0.20,
   };
 
-  const annualGrowthRate = categoryGrowthRates[category] || 0.12;
+  const annualGrowthRate = categoryGrowthRates[category] ?? 0.12;
+  const demandIndex = clampIndex(marketData.demandIndex);
+  const competitionIndex = clampIndex(marketData.competitionIndex);
+  const populationDensity = Math.max(0, Number.isFinite(marketData.populationDensity) ? marketData.populationDensity : 0);
+  const baselineBizScore = clampIndex(currentBizScore);
 
   // Calculate 6-month and 12-month growth factors
   const growth6M = 1 + (annualGrowthRate * 0.5);
@@ -40,16 +47,16 @@ export const generateForecast = (
   const competitionGrowth12M = 1 + (annualGrowthRate * 0.6);
 
   // Project demand
-  const demandIndex6M = Math.min(100, Math.round(marketData.demandIndex * growth6M));
-  const demandIndex12M = Math.min(100, Math.round(marketData.demandIndex * growth12M));
+  const demandIndex6M = Math.min(100, Math.round(demandIndex * growth6M));
+  const demandIndex12M = Math.min(100, Math.round(demandIndex * growth12M));
 
   // Project competition
-  const competitionIndex6M = Math.min(100, Math.round(marketData.competitionIndex * competitionGrowth6M));
-  const competitionIndex12M = Math.min(100, Math.round(marketData.competitionIndex * competitionGrowth12M));
+  const competitionIndex6M = Math.min(100, Math.round(competitionIndex * competitionGrowth6M));
+  const competitionIndex12M = Math.min(100, Math.round(competitionIndex * competitionGrowth12M));
 
   // Calculate future BizScores using enhanced formula
   const calculateFutureBizScore = (demand: number, competition: number, density: number) => {
-    const normalizedDensity = Math.min(100, (density / 20000) * 100);
+    const normalizedDensity = Math.min(100, (Math.max(0, Number.isFinite(density) ? density : 0) / 20000) * 100);
     const competitionPenalty = 100 - (competition * 0.1);
     
     return Math.round(
@@ -62,12 +69,12 @@ export const generateForecast = (
     );
   };
 
-  const bizScore6M = calculateFutureBizScore(demandIndex6M, competitionIndex6M, marketData.populationDensity);
+  const bizScore6M = calculateFutureBizScore(demandIndex6M, competitionIndex6M, populationDensity);
   const bizScore12M = calculateFutureBizScore(demandIndex12M, competitionIndex12M, marketData.populationDensity);
 
   // Determine trend direction
   let trendDirection: "growing" | "flat" | "declining";
-  const scoreDiff = bizScore12M - currentBizScore;
+  const scoreDiff = bizScore12M - baselineBizScore;
   
   if (scoreDiff > 5) {
     trendDirection = "growing";

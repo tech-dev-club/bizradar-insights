@@ -6,6 +6,21 @@
 
 import { calculateDistance, type Coordinates } from "@/lib/distanceCalc";
 
+/**
+ * Create repeatable sample competitor values for a fixed location/category/radius.
+ */
+const createSeededRandom = (seedText: string): (() => number) => {
+  let seed = 2166136261;
+  for (let index = 0; index < seedText.length; index += 1) {
+    seed = Math.imul(seed ^ seedText.charCodeAt(index), 16777619);
+  }
+
+  return () => {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+};
+
 export interface Competitor {
   id: string;
   name: string;
@@ -36,7 +51,7 @@ export function scanCompetition(
   category: string,
   radiusKm: number = 3
 ): CompetitionAnalysis {
-  // Generate mock competitors based on category and location
+  // Generate a stable sample set for the same coordinates and inputs.
   const competitors = generateMockCompetitors(location, category, radiusKm);
   
   // Sort by distance
@@ -86,6 +101,7 @@ function generateMockCompetitors(
   };
   
   const count = categoryCompetitorCount[category] || 12;
+  const random = createSeededRandom(`${location.lat.toFixed(5)}:${location.lng.toFixed(5)}:${category}:${radiusKm}`);
   const competitors: Competitor[] = [];
   
   const categoryNames: Record<string, string[]> = {
@@ -117,8 +133,8 @@ function generateMockCompetitors(
   
   for (let i = 0; i < count; i++) {
     // Generate random coordinates within radius
-    const angle = Math.random() * 2 * Math.PI;
-    const distance = Math.random() * radiusKm;
+    const angle = random() * 2 * Math.PI;
+    const distance = random() * radiusKm;
     
     const lat = location.lat + (distance / 111) * Math.cos(angle);
     const lng = location.lng + (distance / (111 * Math.cos(location.lat * Math.PI / 180))) * Math.sin(angle);
@@ -132,9 +148,9 @@ function generateMockCompetitors(
       category,
       coordinates,
       distance: actualDistance,
-      rating: 3 + Math.random() * 2, // 3-5 stars
-      priceLevel: (["₹", "₹₹", "₹₹₹"] as const)[Math.floor(Math.random() * 3)],
-      reviewCount: Math.floor(Math.random() * 500) + 50
+      rating: 3 + random() * 2, // 3-5 stars
+      priceLevel: (["₹", "₹₹", "₹₹₹"] as const)[Math.floor(random() * 3)],
+      reviewCount: Math.floor(random() * 500) + 50
     });
   }
   

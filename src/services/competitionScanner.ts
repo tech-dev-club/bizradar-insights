@@ -36,8 +36,12 @@ export function scanCompetition(
   category: string,
   radiusKm: number = 3
 ): CompetitionAnalysis {
-  // Generate mock competitors based on category and location
-  const competitors = generateMockCompetitors(location, category, radiusKm);
+  // Invalid radii should not create infinite density or invalid coordinates.
+  const safeRadiusKm =
+    Number.isFinite(radiusKm) && radiusKm > 0 ? radiusKm : 3;
+
+  // Generate mock competitors based on category and location.
+  const competitors = generateMockCompetitors(location, category, safeRadiusKm);
   
   // Sort by distance
   const sortedCompetitors = competitors.sort((a, b) => a.distance - b.distance);
@@ -49,7 +53,7 @@ export function scanCompetition(
   const averageRating = competitors.reduce((sum, c) => sum + c.rating, 0) / totalCount || 0;
   
   // Determine competition density
-  const { density, densityScore } = calculateCompetitionDensity(totalCount, radiusKm);
+  const { density, densityScore } = calculateCompetitionDensity(totalCount, safeRadiusKm);
   
   // Generate recommendations
   const recommendations = generateRecommendations(density, averageRating, averageDistance);
@@ -149,8 +153,10 @@ function calculateCompetitionDensity(
   radiusKm: number
 ): { density: "Low" | "Balanced" | "High" | "Oversaturated"; densityScore: number } {
   // Calculate competitors per square km
-  const area = Math.PI * radiusKm * radiusKm;
-  const density = competitorCount / area;
+  const safeRadiusKm =
+    Number.isFinite(radiusKm) && radiusKm > 0 ? radiusKm : 3;
+  const area = Math.PI * safeRadiusKm * safeRadiusKm;
+  const density = area > 0 ? competitorCount / area : 0;
   
   // Calculate density score (0-100)
   let densityScore = Math.min(100, (density / 5) * 100); // 5 competitors per sq km = 100 score
@@ -221,8 +227,12 @@ export function getCompetitionDensityAtPoint(
   allCompetitors: Competitor[],
   influenceRadius: number = 0.5 // km
 ): number {
+  const safeInfluenceRadius =
+    Number.isFinite(influenceRadius) && influenceRadius >= 0 ? influenceRadius : 0.5;
+
   const nearbyCompetitors = allCompetitors.filter(
-    comp => calculateDistance(point, comp.coordinates) <= influenceRadius
+    (competitor) =>
+      calculateDistance(point, competitor.coordinates) <= safeInfluenceRadius,
   );
   
   // Return density score (0-100)

@@ -47,13 +47,31 @@ export const searchLocations = async (query: string): Promise<LocationData[]> =>
 
     const data: NominatimResult[] = await response.json();
 
-    return data.map((result) => ({
-      name: result.name,
-      lat: Number.parseFloat(result.lat),
-      lng: Number.parseFloat(result.lon),
-      formattedAddress: result.display_name,
-      state: extractState(result.display_name),
-    }));
+    return data
+      .map((result) => {
+        const lat = Number.parseFloat(result.lat);
+        const lng = Number.parseFloat(result.lon);
+        if (
+          !Number.isFinite(lat) ||
+          !Number.isFinite(lng) ||
+          lat < -90 ||
+          lat > 90 ||
+          lng < -180 ||
+          lng > 180 ||
+          !result.display_name
+        ) {
+          return null;
+        }
+
+        return {
+          name: result.name || result.display_name.split(",")[0],
+          lat,
+          lng,
+          formattedAddress: result.display_name,
+          state: extractState(result.display_name),
+        };
+      })
+      .filter((location): location is LocationData => location !== null);
   } catch (error) {
     console.error("Geocoding error:", error);
     // Keep the local fallback useful when the external provider is unavailable.

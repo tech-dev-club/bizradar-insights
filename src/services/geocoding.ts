@@ -26,12 +26,13 @@ export interface NominatimResult {
  * Returns matching locations worldwide
  */
 export const searchLocations = async (query: string): Promise<LocationData[]> => {
-  if (!query || query.length < 2) return [];
-  
+  const normalizedQuery = query.trim();
+  if (normalizedQuery.length < 2) return [];
+
   try {
     const response = await fetch(
       `https://nominatim.openstreetmap.org/search?` +
-      `q=${encodeURIComponent(query)}&` +
+      `q=${encodeURIComponent(normalizedQuery)}&` +
       `format=json&` +
       `limit=5&` +
       `addressdetails=1`,
@@ -46,17 +47,36 @@ export const searchLocations = async (query: string): Promise<LocationData[]> =>
     
     const data: NominatimResult[] = await response.json();
     
-    return data.map(result => ({
-      name: result.name,
-      lat: parseFloat(result.lat),
-      lng: parseFloat(result.lon),
-      formattedAddress: result.display_name,
-      state: extractState(result.display_name),
-    }));
+    return data
+      .map((result) => {
+        const lat = Number.parseFloat(result.lat);
+        const lng = Number.parseFloat(result.lon);
+
+        if (
+          !Number.isFinite(lat) ||
+          !Number.isFinite(lng) ||
+          lat < -90 ||
+          lat > 90 ||
+          lng < -180 ||
+          lng > 180 ||
+          !result.display_name
+        ) {
+          return null;
+        }
+
+        return {
+          name: result.name || result.display_name.split(",")[0],
+          lat,
+          lng,
+          formattedAddress: result.display_name,
+          state: extractState(result.display_name),
+        };
+      })
+      .filter((location): location is LocationData => location !== null);
   } catch (error) {
     console.error("Geocoding error:", error);
     // Fallback to local Indian cities
-    return searchIndianCities(query);
+    return searchIndianCities(normalizedQuery);
   }
 };
 
@@ -75,7 +95,7 @@ const extractState = (displayName: string): string | undefined => {
 export const searchIndianCities = (query: string): LocationData[] => {
   if (!query || query.length < 2) return [];
   
-  const searchTerm = query.toLowerCase();
+  const searchTerm = query.trim().toLocaleLowerCase();
   return INDIAN_CITIES
     .filter(city => 
       city.name.toLowerCase().includes(searchTerm) || 
@@ -98,7 +118,7 @@ export const searchIndianCities = (query: string): LocationData[] => {
  */
 export const getCityCoordinates = (cityNameOrAddress: string): LocationData | null => {
   // Extract city name from formatted address (e.g., "Mumbai, Maharashtra, India" -> "Mumbai")
-  const cityName = cityNameOrAddress.split(',')[0].trim();
+  const cityName = cityNameOrAddress.trim().split(',')[0].trim();
   
   const city = INDIAN_CITIES.find(
     c => c.name.toLowerCase() === cityName.toLowerCase()

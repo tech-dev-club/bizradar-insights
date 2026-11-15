@@ -27,6 +27,22 @@ export interface OpportunityData {
  * Generate mock market data for Indian cities
  * Based on city tier and characteristics
  */
+/**
+ * Create a repeatable pseudo-random sequence for demo estimates.
+ * The same inputs produce the same sample values across renders and reloads.
+ */
+const createSeededRandom = (seedText: string): (() => number) => {
+  let seed = 2166136261;
+  for (let index = 0; index < seedText.length; index += 1) {
+    seed = Math.imul(seed ^ seedText.charCodeAt(index), 16777619);
+  }
+
+  return () => {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+};
+
 export const generateMarketData = (
   cityName: string,
   population: number = 1000000
@@ -42,8 +58,9 @@ export const generateMarketData = (
   
   const multiplier = tierMultipliers[tier];
   
-  // Generate realistic data with some randomness
-  const randomFactor = () => 0.85 + Math.random() * 0.3;
+  // Keep sample estimates stable for a given city and population.
+  const random = createSeededRandom(`${cityName.trim().toLowerCase()}:${population}`);
+  const randomFactor = () => 0.85 + random() * 0.3;
   
   return {
     demandIndex: Math.min(100, Math.round(65 * multiplier.demand * randomFactor())),
@@ -66,6 +83,7 @@ export const generateOpportunities = (
 ): OpportunityData[] => {
   const tier = getCityTier(cityName);
   const isTechHub = TECH_HUB_CITIES.includes(cityName);
+  const random = createSeededRandom(`${cityName.trim().toLowerCase()}:${category.trim().toLowerCase()}`);
   
   // Comprehensive opportunity templates based on category
   const opportunityTemplates: Record<string, Array<{ title: string; baseScore: number }>> = {
@@ -337,7 +355,7 @@ export const generateOpportunities = (
   const tierAdjustment = tier === 1 ? 5 : tier === 2 ? 0 : -5;
   
   return templates.slice(0, 5).map((template, index) => {
-    const adjustedScore = Math.min(95, Math.max(50, template.baseScore + tierAdjustment + techBoost + (Math.random() * 10 - 5)));
+    const adjustedScore = Math.min(95, Math.max(50, template.baseScore + tierAdjustment + techBoost + (random() * 10 - 5)));
     const bizScore = Math.round(adjustedScore);
     
     // Competition logic
@@ -359,9 +377,9 @@ export const generateOpportunities = (
       category: category.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" "),
       demandIndex: marketData.demandIndex,
       competition: competitionLevel,
-      competitionCount: marketData.competitionCount + Math.round(Math.random() * 50 - 25),
-      growthRate: `+${Math.round(15 + Math.random() * 30)}%`,
-      investmentRange: investmentRanges[tier][Math.floor(Math.random() * 3)],
+      competitionCount: marketData.competitionCount + Math.round(random() * 50 - 25),
+      growthRate: `+${Math.round(15 + random() * 30)}%`,
+      investmentRange: investmentRanges[tier][Math.floor(random() * 3)],
       bizScore,
       profitPotential: bizScore > 75 ? "High" : bizScore > 60 ? "Medium" : "Low",
     };

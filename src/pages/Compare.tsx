@@ -33,7 +33,14 @@ const Compare = () => {
   }, [user, searchParams]);
 
   const loadComparison = async () => {
-    const ids = searchParams.get("ids")?.split(",") || [];
+    const ids = Array.from(
+      new Set(
+        (searchParams.get("ids") || "")
+          .split(",")
+          .map((id) => id.trim())
+          .filter(Boolean),
+      ),
+    );
     if (ids.length < 2) {
       toast.error("Select at least 2 ideas to compare");
       navigate("/saved");
@@ -74,10 +81,15 @@ const Compare = () => {
 
       setReports(reportsData);
 
-      if (reportsData.length >= 2) {
-        const result = calculateDecisionMatrix(reportsData);
-        setComparisonResult(result);
+      if (reportsData.length < 2 || reportsData.length !== ids.length) {
+        setComparisonResult(null);
+        toast.error("Some selected ideas are no longer available. Choose at least two saved ideas.");
+        navigate("/saved");
+        return;
       }
+
+      const result = calculateDecisionMatrix(reportsData);
+      setComparisonResult(result);
     } catch (error: any) {
       toast.error("Failed to load comparison: " + error.message);
     } finally {

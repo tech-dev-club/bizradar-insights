@@ -41,10 +41,18 @@ export function generateSeasonalForecast(
   category: string,
   baselineRevenue: number
 ): SeasonalForecast {
-  const pattern = seasonalPatterns[category] || seasonalPatterns["Retail"];
+  const normalizedCategory = category.trim().toLowerCase();
+  const categoryKey = Object.keys(seasonalPatterns).find(
+    (key) => key.toLowerCase() === normalizedCategory,
+  ) ?? "Retail";
+  const pattern = seasonalPatterns[categoryKey] ?? seasonalPatterns.Retail;
+  const safeBaselineRevenue = Math.max(
+    0,
+    Number.isFinite(baselineRevenue) ? baselineRevenue : 0,
+  );
   
   const monthlyData: SeasonalData[] = pattern.map((multiplier, index) => {
-    const expectedRevenue = Math.round(baselineRevenue * multiplier);
+    const expectedRevenue = Math.round(safeBaselineRevenue * multiplier);
     let reasoning = "";
 
     if (multiplier >= 1.2) {
@@ -102,11 +110,11 @@ export function generateSeasonalForecast(
     recommendations.push("Focus on building steady customer base");
   }
 
-  if (category === "Gym" && peakMonths.includes("Jan")) {
+  if (categoryKey === "Gym" && peakMonths.includes("Jan")) {
     recommendations.push("Capitalize on New Year fitness resolutions");
   }
 
-  if (category === "Retail" && peakMonths.includes("Nov")) {
+  if (categoryKey === "Retail" && peakMonths.includes("Nov")) {
     recommendations.push("Prepare for festive season rush - stock premium items");
   }
 

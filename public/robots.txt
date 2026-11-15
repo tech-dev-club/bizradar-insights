@@ -12,3 +12,7 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /auth
+Disallow: /saved
+Disallow: /compare
+Disallow: /feasibility-report

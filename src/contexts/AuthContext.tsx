@@ -100,6 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
+
     if (error) {
       toast.error("Unable to sign out. Please try again.");
       throw error;

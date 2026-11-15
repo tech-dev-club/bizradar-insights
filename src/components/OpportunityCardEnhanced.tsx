@@ -177,13 +177,13 @@ const OpportunityCardEnhanced = ({
 
       {/* Tabs for Different Views */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-6 mb-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="forecast">Forecast</TabsTrigger>
-          <TabsTrigger value="trends">Trends</TabsTrigger>
-          <TabsTrigger value="competition">Competition</TabsTrigger>
-          <TabsTrigger value="category">Category</TabsTrigger>
-          <TabsTrigger value="insights">AI Insights</TabsTrigger>
+        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 mb-4 sm:grid-cols-3 lg:grid-cols-6">
+          <TabsTrigger value="overview" className="min-w-0 whitespace-normal px-2 py-2 text-xs leading-tight sm:text-sm">Overview</TabsTrigger>
+          <TabsTrigger value="forecast" className="min-w-0 whitespace-normal px-2 py-2 text-xs leading-tight sm:text-sm">Forecast</TabsTrigger>
+          <TabsTrigger value="trends" className="min-w-0 whitespace-normal px-2 py-2 text-xs leading-tight sm:text-sm">Trends</TabsTrigger>
+          <TabsTrigger value="competition" className="min-w-0 whitespace-normal px-2 py-2 text-xs leading-tight sm:text-sm">Competition</TabsTrigger>
+          <TabsTrigger value="category" className="min-w-0 whitespace-normal px-2 py-2 text-xs leading-tight sm:text-sm">Category</TabsTrigger>
+          <TabsTrigger value="insights" className="min-w-0 whitespace-normal px-2 py-2 text-xs leading-tight sm:text-sm">AI Insights</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}

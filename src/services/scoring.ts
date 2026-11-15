@@ -51,25 +51,42 @@ export const calculateBizScore = (
   competitionDensityScore: number = 50, // 0-100, higher = more saturated
   categoryEaseScore: number = 65 // 0-100, higher = easier
 ): BizScoreBreakdown => {
+  const clamp = (value: number, fallback = 0) =>
+    Math.min(100, Math.max(0, Number.isFinite(value) ? value : fallback));
+  const safeMarketData: MarketData = {
+    ...marketData,
+    demandIndex: clamp(marketData.demandIndex),
+    competitionIndex: clamp(marketData.competitionIndex),
+    competitionCount: Math.max(0, Number.isFinite(marketData.competitionCount) ? marketData.competitionCount : 0),
+    populationDensity: Math.max(0, Number.isFinite(marketData.populationDensity) ? marketData.populationDensity : 0),
+    avgIncome: Math.max(0, Number.isFinite(marketData.avgIncome) ? marketData.avgIncome : 0),
+    internetPenetration: clamp(marketData.internetPenetration),
+    literacyRate: clamp(marketData.literacyRate),
+  };
+  const safeCompetitionDensityScore = clamp(competitionDensityScore, 50);
+  const safeCategoryEaseScore = clamp(categoryEaseScore, 65);
+  const safeForecastGrowth = Number.isFinite(forecastGrowth) && forecastGrowth > 0
+    ? forecastGrowth
+    : getAnnualGrowthRate(category);
+
   // Normalize population density (assume max 20000/sq km for scaling)
-  const normalizedDensity = Math.min(100, (marketData.populationDensity / 20000) * 100);
+  const normalizedDensity = Math.min(100, (safeMarketData.populationDensity / 20000) * 100);
   
   // Get category-specific growth rate
-  const growthRate = getAnnualGrowthRate(category);
-  const growthPercentage = (forecastGrowth || growthRate) * 100;
+  const growthPercentage = (safeForecastGrowth) * 100;
   
   // Competition penalty (inverse of density score)
-  const competitionPenalty = Math.max(0, 100 - competitionDensityScore);
+  const competitionPenalty = Math.max(0, 100 - safeCompetitionDensityScore);
   
   // Strategic opportunity index (high demand - low competition = high opportunity)
-  const strategicOpportunityIndex = Math.max(0, marketData.demandIndex - competitionDensityScore);
+  const strategicOpportunityIndex = Math.max(0, safeMarketData.demandIndex - safeCompetitionDensityScore);
   
   // BizScore 3.0 Components
-  const demandComponent = marketData.demandIndex * 0.35;
+  const demandComponent = safeMarketData.demandIndex * 0.35;
   const growthComponent = growthPercentage * 0.20;
   const densityComponent = normalizedDensity * 0.15;
   const competitionComponent = competitionPenalty * 0.10;
-  const categoryComponent = categoryEaseScore * 0.10;
+  const categoryComponent = safeCategoryEaseScore * 0.10;
   const strategicComponent = strategicOpportunityIndex * 0.10;
   
   // Total score (BizScore 3.0)
@@ -81,27 +98,27 @@ export const calculateBizScore = (
   );
   
   // Calculate individual scores
-  const demandScore = Math.round(marketData.demandIndex);
+  const demandScore = Math.round(safeMarketData.demandIndex);
   const competitionScore = Math.round(competitionPenalty);
   const locationScore = Math.round(normalizedDensity);
   const economicScore = Math.round(
-    (marketData.avgIncome / 10) * 33 + 
-    (marketData.internetPenetration) * 0.33 + 
-    (marketData.literacyRate) * 0.33
+    (safeMarketData.avgIncome / 10) * 33 + 
+    (safeMarketData.internetPenetration) * 0.33 + 
+    (safeMarketData.literacyRate) * 0.33
   );
   
   // Determine opportunity type
   const opportunityType = determineOpportunityType(
     overall,
-    competitionDensityScore,
-    marketData.demandIndex
+    safeCompetitionDensityScore,
+    safeMarketData.demandIndex
   );
   
   // Determine impact factors
   const factors = generateImpactFactors(
-    marketData,
-    competitionDensityScore,
-    categoryEaseScore,
+    safeMarketData,
+    safeCompetitionDensityScore,
+    safeCategoryEaseScore,
     strategicOpportunityIndex
   );
   
@@ -111,7 +128,7 @@ export const calculateBizScore = (
     competitionScore,
     locationScore,
     economicScore,
-    categoryEaseScore: Math.round(categoryEaseScore),
+    categoryEaseScore: Math.round(safeCategoryEaseScore),
     strategicOpportunityScore: Math.round(strategicOpportunityIndex),
     opportunityType,
     factors,

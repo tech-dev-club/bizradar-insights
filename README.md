@@ -32,7 +32,16 @@ cd <YOUR_PROJECT_NAME>
 # Step 3: Install the necessary dependencies.
 npm i
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Step 4: Create your local environment file.
+cp .env.example .env
+
+# On Windows PowerShell, use:
+# Copy-Item .env.example .env
+
+# Add your Supabase project ID, publishable key, and URL to .env.
+# The publishable key is intended for browser use. Never put a Supabase service-role key in VITE_* variables.
+
+# Step 5: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
 

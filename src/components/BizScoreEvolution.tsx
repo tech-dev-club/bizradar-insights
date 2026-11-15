@@ -10,12 +10,12 @@ interface BizScoreEvolutionProps {
   color: string;
 }
 
-const BizScoreEvolution = ({ 
-  currentScore, 
-  score6M, 
-  score12M, 
+const BizScoreEvolution = ({
+  currentScore,
+  score6M,
+  score12M,
   rating,
-  color 
+  color,
 }: BizScoreEvolutionProps) => {
   const safeCurrentScore = Number.isFinite(currentScore) ? Math.min(100, Math.max(0, currentScore)) : 0;
   const safeScore6M = Number.isFinite(score6M) ? Math.min(100, Math.max(0, score6M)) : 0;
@@ -68,8 +68,8 @@ const BizScoreEvolution = ({
               <span className={`text-2xl font-bold ${getScoreColor(safeScore6M)}`}>
                 {safeScore6M}
               </span>
-              <span className={`text-sm ${safeScore6M > safeCurrentScore ? 'text-success' : safeScore6M < safeCurrentScore ? 'text-destructive' : 'text-muted-foreground'}`}>
-                ({getScoreChange(score6M)})
+              <span className={`text-sm ${safeScore6M > safeCurrentScore ? "text-success" : safeScore6M < safeCurrentScore ? "text-destructive" : "text-muted-foreground"}`}>
+                ({getScoreChange(safeScore6M)})
               </span>
             </div>
           </div>
@@ -87,8 +87,8 @@ const BizScoreEvolution = ({
               <span className={`text-2xl font-bold ${getScoreColor(safeScore12M)}`}>
                 {safeScore12M}
               </span>
-              <span className={`text-sm ${safeScore12M > safeCurrentScore ? 'text-success' : safeScore12M < safeCurrentScore ? 'text-destructive' : 'text-muted-foreground'}`}>
-                ({getScoreChange(score12M)})
+              <span className={`text-sm ${safeScore12M > safeCurrentScore ? "text-success" : safeScore12M < safeCurrentScore ? "text-destructive" : "text-muted-foreground"}`}>
+                ({getScoreChange(safeScore12M)})
               </span>
             </div>
           </div>

@@ -68,8 +68,10 @@ const SavedIdeas = () => {
 
       if (error) throw error;
 
-      setSavedIdeas(savedIdeas.filter(idea => idea.id !== id));
-      setSelectedForComparison(selectedForComparison.filter(selectedId => selectedId !== id));
+      setSavedIdeas((currentIdeas) => currentIdeas.filter((idea) => idea.id !== id));
+      setSelectedForComparison((currentSelection) =>
+        currentSelection.filter((selectedId) => selectedId !== id),
+      );
       toast.success("Idea removed from saved list");
     } catch (error: any) {
       toast.error("Failed to delete: " + error.message);
@@ -77,15 +79,18 @@ const SavedIdeas = () => {
   };
 
   const toggleSelection = (id: string) => {
-    if (selectedForComparison.includes(id)) {
-      setSelectedForComparison(selectedForComparison.filter(selectedId => selectedId !== id));
-    } else {
-      if (selectedForComparison.length >= 5) {
-        toast.error("You can compare up to 5 ideas at once");
-        return;
+    setSelectedForComparison((currentSelection) => {
+      if (currentSelection.includes(id)) {
+        return currentSelection.filter((selectedId) => selectedId !== id);
       }
-      setSelectedForComparison([...selectedForComparison, id]);
-    }
+
+      if (currentSelection.length >= 5) {
+        toast.error("You can compare up to 5 ideas at once");
+        return currentSelection;
+      }
+
+      return [...currentSelection, id];
+    });
   };
 
   const handleCompare = () => {

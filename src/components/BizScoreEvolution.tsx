@@ -10,15 +10,19 @@ interface BizScoreEvolutionProps {
   color: string;
 }
 
-const BizScoreEvolution = ({ 
-  currentScore, 
-  score6M, 
-  score12M, 
+const BizScoreEvolution = ({
+  currentScore,
+  score6M,
+  score12M,
   rating,
-  color 
+  color,
 }: BizScoreEvolutionProps) => {
+  const safeCurrentScore = Number.isFinite(currentScore) ? Math.min(100, Math.max(0, currentScore)) : 0;
+  const safeScore6M = Number.isFinite(score6M) ? Math.min(100, Math.max(0, score6M)) : 0;
+  const safeScore12M = Number.isFinite(score12M) ? Math.min(100, Math.max(0, score12M)) : 0;
+
   const getScoreChange = (futureScore: number) => {
-    const diff = futureScore - currentScore;
+    const diff = futureScore - safeCurrentScore;
     const sign = diff > 0 ? "+" : "";
     return `${sign}${diff}`;
   };
@@ -43,11 +47,11 @@ const BizScoreEvolution = ({
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-muted-foreground">Current Score</span>
-            <span className={`text-3xl font-bold ${getScoreColor(currentScore)}`}>
-              {currentScore}
+            <span className={`text-3xl font-bold ${getScoreColor(safeCurrentScore)}`}>
+              {safeCurrentScore}
             </span>
           </div>
-          <Progress value={currentScore} className="h-3" />
+          <Progress value={safeCurrentScore} className="h-3" />
           <p className="text-xs text-muted-foreground text-center">
             Rating: <span className="font-semibold text-foreground">{rating}</span>
           </p>
@@ -61,15 +65,15 @@ const BizScoreEvolution = ({
               <span className="text-sm font-medium">6 Months</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className={`text-2xl font-bold ${getScoreColor(score6M)}`}>
-                {score6M}
+              <span className={`text-2xl font-bold ${getScoreColor(safeScore6M)}`}>
+                {safeScore6M}
               </span>
-              <span className={`text-sm ${score6M > currentScore ? 'text-success' : 'text-destructive'}`}>
-                ({getScoreChange(score6M)})
+              <span className={`text-sm ${safeScore6M > safeCurrentScore ? "text-success" : safeScore6M < safeCurrentScore ? "text-destructive" : "text-muted-foreground"}`}>
+                ({getScoreChange(safeScore6M)})
               </span>
             </div>
           </div>
-          <Progress value={score6M} className="h-2" />
+          <Progress value={safeScore6M} className="h-2" />
         </div>
 
         {/* 12 Month Projection */}
@@ -80,23 +84,23 @@ const BizScoreEvolution = ({
               <span className="text-sm font-medium">12 Months</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className={`text-2xl font-bold ${getScoreColor(score12M)}`}>
-                {score12M}
+              <span className={`text-2xl font-bold ${getScoreColor(safeScore12M)}`}>
+                {safeScore12M}
               </span>
-              <span className={`text-sm ${score12M > currentScore ? 'text-success' : 'text-destructive'}`}>
-                ({getScoreChange(score12M)})
+              <span className={`text-sm ${safeScore12M > safeCurrentScore ? "text-success" : safeScore12M < safeCurrentScore ? "text-destructive" : "text-muted-foreground"}`}>
+                ({getScoreChange(safeScore12M)})
               </span>
             </div>
           </div>
-          <Progress value={score12M} className="h-2" />
+          <Progress value={safeScore12M} className="h-2" />
         </div>
 
         {/* Projection Summary */}
         <div className="p-3 bg-muted/50 rounded-lg">
           <p className="text-xs text-center text-muted-foreground">
-            {score12M > currentScore + 10 ? (
+            {safeScore12M > safeCurrentScore + 10 ? (
               <span className="text-success font-semibold">Strong upward trajectory expected</span>
-            ) : score12M < currentScore - 10 ? (
+            ) : safeScore12M < safeCurrentScore - 10 ? (
               <span className="text-destructive font-semibold">Declining trend projected</span>
             ) : (
               <span className="text-warning font-semibold">Relatively stable outlook</span>

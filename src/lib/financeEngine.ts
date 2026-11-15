@@ -65,7 +65,10 @@ export function generateFinancialProjection(inputs: FinancialInputs): FinancialP
   const populationDensity = Math.max(0, finiteOr(inputs.populationDensity, 0));
   const forecastGrowth = clamp(finiteOr(inputs.forecastGrowth, 1), 0.1, 2);
 
-  const baseCosts = BASE_SETUP_COSTS[inputs.category] || DEFAULT_COSTS;
+  const categoryKey = Object.keys(BASE_SETUP_COSTS).find(
+    (key) => key.toLowerCase() === inputs.category.trim().toLowerCase(),
+  );
+  const baseCosts = categoryKey ? BASE_SETUP_COSTS[categoryKey] : DEFAULT_COSTS;
 
   const locationMultiplier =
     populationDensity >= 5000 ? 1.3 :
@@ -78,8 +81,12 @@ export function generateFinancialProjection(inputs: FinancialInputs): FinancialP
   const operatingCostMin = Math.round(setupCostMin * 0.12);
   const operatingCostMax = Math.round(setupCostMax * 0.16);
 
-  const revenueMultiplier =
-    REVENUE_MULTIPLIERS[inputs.category] || DEFAULT_REVENUE_MULTIPLIER;
+  const revenueKey = Object.keys(REVENUE_MULTIPLIERS).find(
+    (key) => key.toLowerCase() === inputs.category.trim().toLowerCase(),
+  );
+  const revenueMultiplier = revenueKey
+    ? REVENUE_MULTIPLIERS[revenueKey]
+    : DEFAULT_REVENUE_MULTIPLIER;
 
   const competitionPenalty =
     inputs.competitionDensity === "Oversaturated" ? 0.5 :

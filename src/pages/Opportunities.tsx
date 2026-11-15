@@ -112,7 +112,7 @@ const Opportunities = () => {
           <div className="mb-12 text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border mb-6">
               <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-sm text-muted-foreground">Powered by AI Market Intelligence</span>
+              <span className="text-sm text-muted-foreground">Indicative Market Planning Estimates</span>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
               Find Your{" "}
@@ -121,9 +121,12 @@ const Opportunities = () => {
               </span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Enter your location and category to discover AI-analyzed opportunities with real market data
+              Explore generated opportunity ideas and indicative estimates for your selected location and category
             </p>
           </div>
+          <p className="mx-auto -mt-8 mb-8 max-w-3xl text-center text-sm text-muted-foreground" role="note">
+            Results are generated planning estimates, not verified live market research or confirmed competitor listings. Validate local demand, costs, and competition independently before investing.
+          </p>
 
           {/* Search Section */}
           <Card className="p-6 mb-8 bg-card border-border">

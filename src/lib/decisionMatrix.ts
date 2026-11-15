@@ -32,6 +32,9 @@ const WEIGHTS = {
   swotOpportunity: 0.15,
 };
 
+const clampScore = (value: number, fallback = 0): number =>
+  Math.min(100, Math.max(0, Number.isFinite(value) ? value : fallback));
+
 export function calculateDecisionMatrix(reports: FeasibilityReport[]): DecisionMatrixResult {
   if (reports.length === 0) {
     throw new Error("No reports provided for decision matrix");
@@ -47,13 +50,13 @@ export function calculateDecisionMatrix(reports: FeasibilityReport[]): DecisionM
       swotOpportunity: normalizeSWOT(report.swot),
     };
 
-    const totalScore = Math.round(
+    const totalScore = clampScore(Math.round(
       scores.bizScore * WEIGHTS.bizScore +
       scores.forecast * WEIGHTS.forecast +
       scores.competition * WEIGHTS.competition +
       scores.financial * WEIGHTS.financial +
       scores.swotOpportunity * WEIGHTS.swotOpportunity
-    );
+    ));
 
     return {
       report,
@@ -95,12 +98,15 @@ export function calculateDecisionMatrix(reports: FeasibilityReport[]): DecisionM
 
 // Normalize BizScore (0-100)
 function normalizeBizScore(today: number, future: number): number {
-  // Weight current score 60%, future 40%
-  return (today * 0.6 + future * 0.4);
+  // Weight current score 60%, future 40%, and keep the result on the score scale.
+  const current = clampScore(today);
+  const projected = clampScore(future);
+  return clampScore(current * 0.6 + projected * 0.4);
 }
 
 // Normalize Forecast Growth (typically 0.8 - 1.5)
 function normalizeForecast(growth: number): number {
+  if (!Number.isFinite(growth)) return 50;
   if (growth >= 1.3) return 100;
   if (growth >= 1.2) return 85;
   if (growth >= 1.1) return 70;
@@ -123,15 +129,24 @@ function normalizeCompetition(density: string): number {
 // Normalize Financial Viability
 function normalizeFinancials(financials: any): number {
   let score = 0;
-  
+  const breakEvenMonths = Number.isFinite(financials?.breakEvenMonths)
+    ? Math.max(0, financials.breakEvenMonths)
+    : 36;
+  const marginMin = Number.isFinite(financials?.profitMargin?.min)
+    ? financials.profitMargin.min
+    : 0;
+  const marginMax = Number.isFinite(financials?.profitMargin?.max)
+    ? financials.profitMargin.max
+    : marginMin;
+
   // Break-even months (max 50 points)
-  if (financials.breakEvenMonths <= 12) score += 50;
-  else if (financials.breakEvenMonths <= 18) score += 35;
-  else if (financials.breakEvenMonths <= 24) score += 20;
+  if (breakEvenMonths <= 12) score += 50;
+  else if (breakEvenMonths <= 18) score += 35;
+  else if (breakEvenMonths <= 24) score += 20;
   else score += 10;
 
   // Profit margin (max 50 points)
-  const avgMargin = (financials.profitMargin.min + financials.profitMargin.max) / 2;
+  const avgMargin = (marginMin + marginMax) / 2;
   if (avgMargin >= 25) score += 50;
   else if (avgMargin >= 18) score += 35;
   else if (avgMargin >= 12) score += 20;
@@ -142,10 +157,10 @@ function normalizeFinancials(financials: any): number {
 
 // Normalize SWOT (opportunities vs threats)
 function normalizeSWOT(swot: any): number {
-  const opportunityCount = swot.opportunities.length;
-  const threatCount = swot.threats.length;
-  const strengthCount = swot.strengths.length;
-  const weaknessCount = swot.weaknesses.length;
+  const opportunityCount = Array.isArray(swot?.opportunities) ? swot.opportunities.length : 0;
+  const threatCount = Array.isArray(swot?.threats) ? swot.threats.length : 0;
+  const strengthCount = Array.isArray(swot?.strengths) ? swot.strengths.length : 0;
+  const weaknessCount = Array.isArray(swot?.weaknesses) ? swot.weaknesses.length : 0;
 
   const positiveScore = (strengthCount * 10) + (opportunityCount * 12);
   const negativeScore = (weaknessCount * 8) + (threatCount * 10);

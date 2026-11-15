@@ -19,28 +19,28 @@ interface CategoryIntelligenceCardProps {
 const CategoryIntelligenceCard = ({ intelligence }: CategoryIntelligenceCardProps) => {
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case "Low": return "bg-green-100 text-green-700 border-green-300";
-      case "Medium": return "bg-yellow-100 text-yellow-700 border-yellow-300";
-      case "High": return "bg-orange-100 text-orange-700 border-orange-300";
-      case "Very High": return "bg-red-100 text-red-700 border-red-300";
-      default: return "bg-gray-100 text-gray-700 border-gray-300";
+      case "Low": return "bg-success/10 text-success border-success/30";
+      case "Medium": return "bg-warning/10 text-warning border-warning/30";
+      case "High": return "bg-warning/15 text-warning border-warning/40";
+      case "Very High": return "bg-destructive/10 text-destructive border-destructive/30";
+      default: return "bg-muted text-muted-foreground border-border";
     }
   };
 
   const getCapitalColor = (capital: string) => {
     switch (capital) {
-      case "Low": return "text-green-600";
-      case "Medium": return "text-yellow-600";
-      case "High": return "text-orange-600";
-      case "Very High": return "text-red-600";
-      default: return "text-gray-600";
+      case "Low": return "text-success";
+      case "Medium": return "text-warning";
+      case "High": return "text-warning";
+      case "Very High": return "text-destructive";
+      default: return "text-muted-foreground";
     }
   };
 
   return (
     <Card className="p-6 bg-gradient-to-br from-card to-muted/30 border-border">
       <div className="flex items-center gap-2 mb-4">
-        <Lightbulb className="w-6 h-6 text-primary" />
+        <Lightbulb className="w-6 h-6 text-primary" aria-hidden="true" />
         <h3 className="text-xl font-bold">Category Intelligence</h3>
       </div>
 
@@ -49,7 +49,7 @@ const CategoryIntelligenceCard = ({ intelligence }: CategoryIntelligenceCardProp
         {/* Difficulty */}
         <div className="space-y-2">
           <div className="text-sm text-muted-foreground flex items-center gap-2">
-            <Target className="w-4 h-4" />
+            <Target className="w-4 h-4" aria-hidden="true" />
             Difficulty Level
           </div>
           <Badge className={`${getDifficultyColor(intelligence.difficulty)} text-sm px-3 py-1`}>
@@ -63,7 +63,7 @@ const CategoryIntelligenceCard = ({ intelligence }: CategoryIntelligenceCardProp
         {/* Capital Need */}
         <div className="space-y-2">
           <div className="text-sm text-muted-foreground flex items-center gap-2">
-            <DollarSign className="w-4 h-4" />
+            <DollarSign className="w-4 h-4" aria-hidden="true" />
             Capital Requirement
           </div>
           <div className={`text-lg font-bold ${getCapitalColor(intelligence.capitalNeed)}`}>
@@ -74,7 +74,7 @@ const CategoryIntelligenceCard = ({ intelligence }: CategoryIntelligenceCardProp
         {/* Operational Complexity */}
         <div className="space-y-2">
           <div className="text-sm text-muted-foreground flex items-center gap-2">
-            <Wrench className="w-4 h-4" />
+            <Wrench className="w-4 h-4" aria-hidden="true" />
             Operations
           </div>
           <div className="text-lg font-semibold">
@@ -85,7 +85,7 @@ const CategoryIntelligenceCard = ({ intelligence }: CategoryIntelligenceCardProp
         {/* Footfall */}
         <div className="space-y-2">
           <div className="text-sm text-muted-foreground flex items-center gap-2">
-            <Users className="w-4 h-4" />
+            <Users className="w-4 h-4" aria-hidden="true" />
             Required Footfall
           </div>
           <div className="text-lg font-semibold">
@@ -97,7 +97,7 @@ const CategoryIntelligenceCard = ({ intelligence }: CategoryIntelligenceCardProp
       {/* Customer Profile */}
       <div className="mb-6 p-4 bg-muted rounded-lg">
         <div className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
-          <Target className="w-4 h-4 text-primary" />
+          <Target className="w-4 h-4 text-primary" aria-hidden="true" />
           Target Customer Profile
         </div>
         <p className="text-sm">{intelligence.customerProfile}</p>
@@ -106,7 +106,7 @@ const CategoryIntelligenceCard = ({ intelligence }: CategoryIntelligenceCardProp
       {/* Pricing Segment */}
       <div className="mb-6">
         <div className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
-          <DollarSign className="w-4 h-4 text-primary" />
+          <DollarSign className="w-4 h-4 text-primary" aria-hidden="true" />
           Recommended Pricing Segment
         </div>
         <Badge variant="outline" className="text-sm">
@@ -118,7 +118,7 @@ const CategoryIntelligenceCard = ({ intelligence }: CategoryIntelligenceCardProp
       <div className="mb-6 p-4 bg-primary/5 border border-primary/20 rounded-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-primary" />
+            <TrendingUp className="w-5 h-5 text-primary" aria-hidden="true" />
             <span className="font-medium">Growth Multiplier</span>
           </div>
           <div className="text-2xl font-bold text-primary">
@@ -133,7 +133,7 @@ const CategoryIntelligenceCard = ({ intelligence }: CategoryIntelligenceCardProp
       {/* Success Factors */}
       <div className="mb-4">
         <div className="text-sm font-medium mb-3 flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-green-600" />
+          <CheckCircle2 className="w-4 h-4 text-success" />
           Key Success Factors
         </div>
         <div className="space-y-2">
@@ -152,7 +152,7 @@ const CategoryIntelligenceCard = ({ intelligence }: CategoryIntelligenceCardProp
       {/* Common Challenges */}
       <div>
         <div className="text-sm font-medium mb-3 flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 text-orange-600" />
+          <AlertTriangle className="w-4 h-4 text-warning" />
           Common Challenges
         </div>
         <div className="space-y-2">

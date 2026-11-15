@@ -29,6 +29,7 @@ const SavedIdeas = () => {
   const navigate = useNavigate();
   const [savedIdeas, setSavedIdeas] = useState<SavedIdea[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedForComparison, setSelectedForComparison] = useState<string[]>([]);
 
   useEffect(() => {
@@ -44,6 +45,9 @@ const SavedIdeas = () => {
   }, [user]);
 
   const loadSavedIdeas = async () => {
+    setLoading(true);
+    setLoadError(null);
+
     try {
       const { data, error } = await supabase
         .from("saved_ideas")
@@ -52,8 +56,10 @@ const SavedIdeas = () => {
 
       if (error) throw error;
       setSavedIdeas(data || []);
-    } catch (error: any) {
-      toast.error("Failed to load saved ideas: " + error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      setLoadError(message);
+      toast.error("Failed to load saved ideas: " + message);
     } finally {
       setLoading(false);
     }
@@ -68,8 +74,10 @@ const SavedIdeas = () => {
 
       if (error) throw error;
 
-      setSavedIdeas(savedIdeas.filter(idea => idea.id !== id));
-      setSelectedForComparison(selectedForComparison.filter(selectedId => selectedId !== id));
+      setSavedIdeas((currentIdeas) => currentIdeas.filter((idea) => idea.id !== id));
+      setSelectedForComparison((currentSelection) =>
+        currentSelection.filter((selectedId) => selectedId !== id),
+      );
       toast.success("Idea removed from saved list");
     } catch (error: any) {
       toast.error("Failed to delete: " + error.message);
@@ -77,15 +85,18 @@ const SavedIdeas = () => {
   };
 
   const toggleSelection = (id: string) => {
-    if (selectedForComparison.includes(id)) {
-      setSelectedForComparison(selectedForComparison.filter(selectedId => selectedId !== id));
-    } else {
-      if (selectedForComparison.length >= 5) {
-        toast.error("You can compare up to 5 ideas at once");
-        return;
+    setSelectedForComparison((currentSelection) => {
+      if (currentSelection.includes(id)) {
+        return currentSelection.filter((selectedId) => selectedId !== id);
       }
-      setSelectedForComparison([...selectedForComparison, id]);
-    }
+
+      if (currentSelection.length >= 5) {
+        toast.error("You can compare up to 5 ideas at once");
+        return currentSelection;
+      }
+
+      return [...currentSelection, id];
+    });
   };
 
   const handleCompare = () => {
@@ -148,7 +159,15 @@ const SavedIdeas = () => {
           )}
         </div>
 
-        {savedIdeas.length === 0 ? (
+        {loadError ? (
+          <Card className="mx-auto max-w-2xl border-destructive/30">
+            <CardContent className="py-10 text-center" role="alert">
+              <h2 className="mb-2 text-lg font-semibold">Your saved ideas could not be loaded</h2>
+              <p className="mb-5 text-sm text-muted-foreground">{loadError}</p>
+              <Button onClick={loadSavedIdeas}>Try again</Button>
+            </CardContent>
+          </Card>
+        ) : savedIdeas.length === 0 ? (
           <Card className="max-w-2xl mx-auto">
             <CardContent className="text-center py-12">
               <Bookmark className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
@@ -167,10 +186,9 @@ const SavedIdeas = () => {
             {savedIdeas.map((idea) => (
               <Card 
                 key={idea.id}
-                className={`cursor-pointer transition-all hover:shadow-lg ${
+                className={`transition-all hover:shadow-lg ${
                   selectedForComparison.includes(idea.id) ? "ring-2 ring-primary" : ""
                 }`}
-                onClick={() => toggleSelection(idea.id)}
               >
                 <CardHeader>
                   <div className="flex justify-between items-start">
@@ -227,6 +245,15 @@ const SavedIdeas = () => {
                 </CardContent>
 
                 <CardFooter className="flex justify-between gap-2">
+                  <Button
+                    type="button"
+                    variant={selectedForComparison.includes(idea.id) ? "secondary" : "outline"}
+                    size="sm"
+                    aria-pressed={selectedForComparison.includes(idea.id)}
+                    onClick={() => toggleSelection(idea.id)}
+                  >
+                    {selectedForComparison.includes(idea.id) ? "Selected" : "Select to compare"}
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"

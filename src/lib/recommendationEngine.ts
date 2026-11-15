@@ -30,6 +30,25 @@ export interface RecommendationInputs {
 }
 
 export function generateRecommendation(inputs: RecommendationInputs): Recommendation {
+  const swot = inputs.swot ?? {
+    strengths: [],
+    weaknesses: [],
+    opportunities: [],
+    threats: [],
+  };
+  const safeFinancials = {
+    breakEvenMonths: Number.isFinite(inputs.financials?.breakEvenMonths)
+      ? Math.max(0, inputs.financials.breakEvenMonths)
+      : 36,
+    profitMargin: {
+      min: Number.isFinite(inputs.financials?.profitMargin?.min)
+        ? inputs.financials.profitMargin.min
+        : 0,
+      max: Number.isFinite(inputs.financials?.profitMargin?.max)
+        ? inputs.financials.profitMargin.max
+        : 0,
+    },
+  };
   let score = 0;
   const reasoning: string[] = [];
   const actionSteps: string[] = [];
@@ -64,8 +83,8 @@ export function generateRecommendation(inputs: RecommendationInputs): Recommenda
   }
 
   // Factor 3: SWOT Balance (20 points)
-  const swotScore = inputs.swot.strengths.length + inputs.swot.opportunities.length - 
-                    inputs.swot.weaknesses.length - inputs.swot.threats.length;
+  const swotScore = swot.strengths.length + swot.opportunities.length - 
+                    swot.weaknesses.length - swot.threats.length;
   if (swotScore >= 3) {
     score += 20;
     reasoning.push("SWOT analysis reveals strong competitive positioning");
@@ -80,13 +99,13 @@ export function generateRecommendation(inputs: RecommendationInputs): Recommenda
   }
 
   // Factor 4: Financial Viability (15 points)
-  if (inputs.financials.breakEvenMonths <= 12 && inputs.financials.profitMargin.min >= 15) {
+  if (safeFinancials.breakEvenMonths <= 12 && safeFinancials.profitMargin.min >= 15) {
     score += 15;
     reasoning.push("Strong financial viability with quick break-even");
-  } else if (inputs.financials.breakEvenMonths <= 18 && inputs.financials.profitMargin.min >= 10) {
+  } else if (safeFinancials.breakEvenMonths <= 18 && safeFinancials.profitMargin.min >= 10) {
     score += 10;
     reasoning.push("Acceptable financial projections with reasonable timeline");
-  } else if (inputs.financials.breakEvenMonths <= 24) {
+  } else if (safeFinancials.breakEvenMonths <= 24) {
     score += 5;
     reasoning.push("Extended break-even period requires patience");
   } else {
@@ -165,7 +184,7 @@ export function generateRecommendation(inputs: RecommendationInputs): Recommenda
     actionSteps.push("Consider different business categories with higher potential");
     actionSteps.push("Conduct deeper market research before any investment");
     actionSteps.push("Consult with industry veterans about viability concerns");
-    if (inputs.financials.breakEvenMonths > 24) {
+    if (safeFinancials.breakEvenMonths > 24) {
       actionSteps.push("Re-evaluate business model for better financial efficiency");
     }
   }

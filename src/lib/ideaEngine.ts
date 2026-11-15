@@ -5,6 +5,22 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
+import { z } from "zod";
+
+const parsedIdeaSchema = z.object({
+  category: z.string().trim().min(1).max(80),
+  niche: z.string().trim().max(160).default("General"),
+  pricingLevel: z.enum(["Affordable", "Mid-Range", "Premium"]).catch("Mid-Range"),
+  targetAudience: z.array(z.string().trim().min(1).max(80)).max(12).default([]),
+  capitalIntensity: z.enum(["Low", "Medium", "High", "Very High"]).catch("Medium"),
+  operationalComplexity: z.enum(["Easy", "Moderate", "Difficult", "Very Difficult"]).catch("Moderate"),
+  keywords: z.array(z.string().trim().min(1).max(60)).max(20).default([]),
+  uniqueSellingPoints: z.array(z.string().trim().min(1).max(160)).max(12).default([]),
+  requiredSpace: z.enum(["Small", "Medium", "Large"]).catch("Medium"),
+  staffingNeeds: z.enum(["Minimal", "Moderate", "Extensive"]).catch("Moderate"),
+  inventoryNeeds: z.enum(["Low", "Medium", "High"]).catch("Medium"),
+  technologyRequirements: z.enum(["Basic", "Moderate", "Advanced"]).catch("Moderate"),
+});
 
 export interface ParsedIdea {
   category: string;
@@ -33,16 +49,30 @@ export interface IdeaAnalysisResult {
  * Parse a natural language business idea using AI
  */
 export async function parseBusinessIdea(ideaText: string): Promise<ParsedIdea> {
-  const { data, error } = await supabase.functions.invoke('parse-idea', {
-    body: { ideaText }
+  const normalizedIdea = ideaText.trim();
+  if (normalizedIdea.length < 3) {
+    throw new Error("Please describe your business idea in at least 3 characters.");
+  }
+  if (normalizedIdea.length > 2000) {
+    throw new Error("Business idea descriptions must be 2,000 characters or fewer.");
+  }
+
+  const { data, error } = await supabase.functions.invoke("parse-idea", {
+    body: { ideaText: normalizedIdea },
   });
 
   if (error) {
     console.error("Error parsing idea:", error);
-    throw new Error("Failed to parse business idea");
+    throw new Error("Failed to parse business idea. Please try again.");
   }
 
-  return data as ParsedIdea;
+  const parsed = parsedIdeaSchema.safeParse(data);
+  if (!parsed.success) {
+    console.error("Unexpected parse-idea response:", parsed.error.flatten());
+    throw new Error("The idea parser returned an incomplete response. Please try again.");
+  }
+
+  return parsed.data;
 }
 
 /**

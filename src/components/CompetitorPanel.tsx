@@ -18,6 +18,12 @@ interface CompetitorPanelProps {
 }
 
 const CompetitorPanel = ({ analysis }: CompetitorPanelProps) => {
+  const densityScore = Number.isFinite(analysis.densityScore)
+    ? Math.min(100, Math.max(0, analysis.densityScore))
+    : 0;
+  const averageRating = Number.isFinite(analysis.averageRating)
+    ? Math.min(5, Math.max(0, analysis.averageRating))
+    : 0;
   const getDensityColor = (density: string) => {
     switch (density) {
       case "Low": return "text-green-600 bg-green-50 border-green-200";
@@ -48,9 +54,12 @@ const CompetitorPanel = ({ analysis }: CompetitorPanelProps) => {
             Competition Analysis
           </h3>
           <Badge variant="outline" className="text-sm">
-            {analysis.totalCount} Competitors
+            {Math.max(0, analysis.totalCount)} sample competitors
           </Badge>
         </div>
+        <p className="mb-4 text-xs text-muted-foreground" role="note">
+          Illustrative sample competitors generated for planning. These are not verified local business listings.
+        </p>
 
         {/* Density Indicator */}
         <div className={`p-4 rounded-lg border-2 mb-4 ${getDensityColor(analysis.competitionDensity)}`}>
@@ -64,7 +73,7 @@ const CompetitorPanel = ({ analysis }: CompetitorPanelProps) => {
           <div className="w-full bg-white/30 rounded-full h-2 mt-2">
             <div 
               className="h-2 rounded-full bg-current transition-all"
-              style={{ width: `${analysis.densityScore}%` }}
+              style={{ width: `${densityScore}%` }}
             />
           </div>
         </div>
@@ -80,7 +89,7 @@ const CompetitorPanel = ({ analysis }: CompetitorPanelProps) => {
           <div className="p-3 bg-muted rounded-lg">
             <div className="text-sm text-muted-foreground mb-1">Avg Rating</div>
             <div className="text-lg font-semibold flex items-center gap-1">
-              {analysis.averageRating.toFixed(1)}
+              {averageRating.toFixed(1)}
               <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
             </div>
           </div>
@@ -130,7 +139,7 @@ const CompetitorPanel = ({ analysis }: CompetitorPanelProps) => {
                   </div>
                   <div className="flex items-center gap-1 text-sm">
                     <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                    <span className="font-medium">{competitor.rating.toFixed(1)}</span>
+                    <span className="font-medium">{Number.isFinite(competitor.rating) ? Math.min(5, Math.max(0, competitor.rating)).toFixed(1) : "N/A"}</span>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">

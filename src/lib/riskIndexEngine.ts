@@ -31,7 +31,7 @@ function calculateCompetitionRisk(
   const baseRisk = densityRisk[competitionDensity];
   const adjustedRisk = (baseRisk * 0.7) + (competitionIndex * 0.3);
   
-  return Math.round(Math.min(100, adjustedRisk));
+  return Math.round(Math.min(100, Math.max(0, Number.isFinite(adjustedRisk) ? adjustedRisk : 0)));
 }
 
 /**
@@ -62,7 +62,7 @@ function calculateFinancialRisk(
   else if (profitMarginMin < 30) risk += 10;
   else risk += 5;
 
-  return Math.min(100, risk);
+  return Math.round(Math.min(100, Math.max(0, Number.isFinite(risk) ? risk : 0)));
 }
 
 /**
@@ -126,10 +126,12 @@ export function generateRiskIndex(
   const regulatoryRisk = calculateRegulatoryRisk(category);
 
   const overallRisk = Math.round(
-    (competitionRisk * 0.3) +
-    (financialRisk * 0.35) +
-    (operationalRisk * 0.2) +
-    (regulatoryRisk * 0.15)
+    Math.min(100, Math.max(0,
+      (competitionRisk * 0.3) +
+      (financialRisk * 0.35) +
+      (operationalRisk * 0.2) +
+      (regulatoryRisk * 0.15)
+    ))
   );
 
   let riskLevel: "Very Low" | "Low" | "Moderate" | "High" | "Very High";

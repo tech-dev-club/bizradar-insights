@@ -167,10 +167,9 @@ const SavedIdeas = () => {
             {savedIdeas.map((idea) => (
               <Card 
                 key={idea.id}
-                className={`cursor-pointer transition-all hover:shadow-lg ${
+                className={`transition-all hover:shadow-lg ${
                   selectedForComparison.includes(idea.id) ? "ring-2 ring-primary" : ""
                 }`}
-                onClick={() => toggleSelection(idea.id)}
               >
                 <CardHeader>
                   <div className="flex justify-between items-start">
@@ -227,6 +226,15 @@ const SavedIdeas = () => {
                 </CardContent>
 
                 <CardFooter className="flex justify-between gap-2">
+                  <Button
+                    type="button"
+                    variant={selectedForComparison.includes(idea.id) ? "secondary" : "outline"}
+                    size="sm"
+                    aria-pressed={selectedForComparison.includes(idea.id)}
+                    onClick={() => toggleSelection(idea.id)}
+                  >
+                    {selectedForComparison.includes(idea.id) ? "Selected" : "Select to compare"}
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"

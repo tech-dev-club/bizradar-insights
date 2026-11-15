@@ -130,6 +130,24 @@ const Compare = () => {
               </CardContent>
             </Card>
 
+            {comparisonResult.insights?.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Key Comparison Insights</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    {comparisonResult.insights.map((insight: string, index: number) => (
+                      <li key={`insight-${index}`} className="flex items-start gap-2">
+                        <span className="mt-0.5 text-primary" aria-hidden="true">•</span>
+                        <span>{insight}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {comparisonResult.ranking.map((item: any, index: number) => (
                 <Card key={item.id} className={index === 0 ? "border-primary" : ""}>

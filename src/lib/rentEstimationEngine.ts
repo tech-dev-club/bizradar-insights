@@ -31,33 +31,41 @@ export function estimateRent(
   populationDensity: number,
   demandIndex: number
 ): RentEstimate {
-  // Base rent calculation (INR per sq ft)
+  // Base rent calculation (INR per sq ft). Normalize user/stored values first.
+  const safeDemandIndex = Math.min(100, Math.max(0, Number.isFinite(demandIndex) ? demandIndex : 0));
+  const safePopulationDensity = Math.max(
+    0,
+    Number.isFinite(populationDensity) ? populationDensity : 0,
+  );
+  const cityKey = city.split(",")[0].trim().toLowerCase();
+  const categoryKey = category.trim().toLowerCase();
   let baseRent = 50;
 
   // City tier adjustment
   const tierMultipliers: Record<string, number> = {
-    "Mumbai": 3.5,
-    "Delhi": 3.2,
-    "Bangalore": 3.0,
-    "Pune": 2.5,
-    "Hyderabad": 2.3,
-    "Chennai": 2.2,
-    "Kolkata": 2.0,
+    mumbai: 3.5,
+    delhi: 3.2,
+    bangalore: 3.0,
+    bengaluru: 3.0,
+    pune: 2.5,
+    hyderabad: 2.3,
+    chennai: 2.2,
+    kolkata: 2.0,
   };
 
-  baseRent *= tierMultipliers[city] || 1.5;
+  baseRent *= tierMultipliers[cityKey] || 1.5;
 
   // Category adjustment
   const categoryMultipliers: Record<string, number> = {
-    "Cafe": 1.2,
-    "Restaurant": 1.3,
-    "Retail": 1.4,
-    "Salon": 1.0,
-    "Gym": 1.1,
-    "Office": 0.9,
+    cafe: 1.2,
+    restaurant: 1.3,
+    retail: 1.4,
+    salon: 1.0,
+    gym: 1.1,
+    office: 0.9,
   };
 
-  baseRent *= categoryMultipliers[category] || 1.0;
+  baseRent *= categoryMultipliers[categoryKey] || 1.0;
 
   // Space adjustment
   const spaceMultipliers = {
@@ -69,15 +77,15 @@ export function estimateRent(
   baseRent *= spaceMultipliers[requiredSpace];
 
   // Demand adjustment
-  baseRent *= (1 + (demandIndex / 200));
+  baseRent *= 1 + safeDemandIndex / 200;
 
   const minRent = Math.round(baseRent * 0.8);
   const maxRent = Math.round(baseRent * 1.4);
   const avgRent = Math.round((minRent + maxRent) / 2);
 
   // Calculate suitability score
-  const densityScore = Math.min(100, (populationDensity / 150) * 100);
-  const demandScore = demandIndex;
+  const densityScore = Math.min(100, (safePopulationDensity / 150) * 100);
+  const demandScore = safeDemandIndex;
   const suitabilityScore = Math.round((densityScore * 0.4) + (demandScore * 0.6));
 
   // Affordability index (inverse of rent burden)
@@ -97,7 +105,7 @@ export function estimateRent(
   const factors = {
     footfall: demandIndex >= 70 ? "High" : demandIndex >= 50 ? "Medium" : "Low" as "High" | "Medium" | "Low",
     accessibility: suitabilityScore >= 70 ? "Excellent" : suitabilityScore >= 50 ? "Good" : suitabilityScore >= 30 ? "Average" : "Poor" as "Excellent" | "Good" | "Average" | "Poor",
-    competition: populationDensity > 100 ? "High" : populationDensity > 50 ? "Moderate" : "Low" as "Low" | "Moderate" | "High",
+    competition: safePopulationDensity > 100 ? "High" : safePopulationDensity > 50 ? "Moderate" : "Low" as "Low" | "Moderate" | "High",
     infrastructure: suitabilityScore >= 75 ? "Modern" : suitabilityScore >= 55 ? "Good" : suitabilityScore >= 35 ? "Average" : "Basic" as "Modern" | "Good" | "Average" | "Basic",
   };
 

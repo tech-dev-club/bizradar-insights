@@ -177,3 +177,25 @@ All colors MUST be HSL.
     }
   }
 }
+
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .animate-gradient,
+  .animate-fade-in,
+  .animate-fade-in-up {
+    animation: none !important;
+  }
+
+  [class*="delay-"] {
+    animation-delay: 0ms !important;
+  }
+}

@@ -50,7 +50,7 @@ export const generateForecast = (
   // Calculate future BizScores using enhanced formula
   const calculateFutureBizScore = (demand: number, competition: number, density: number) => {
     const normalizedDensity = Math.min(100, (density / 20000) * 100);
-    const competitionPenalty = 100 - (competition * 0.1);
+    const competitionPenalty = Math.max(0, 100 - competition);
     
     return Math.round(
       Math.min(100, Math.max(0, 

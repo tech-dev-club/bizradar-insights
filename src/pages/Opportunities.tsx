@@ -85,6 +85,17 @@ const Opportunities = () => {
     );
   }, [marketData, selectedCategory]);
 
+  const bizScoreData = useMemo(() => {
+    if (!marketData || !competitionAnalysis || !categoryIntelligence) return null;
+    return calculateBizScore(
+      marketData,
+      selectedCategory,
+      0,
+      competitionAnalysis.densityScore,
+      categoryIntelligence.categoryEaseScore,
+    );
+  }, [marketData, selectedCategory, competitionAnalysis, categoryIntelligence]);
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -203,7 +214,7 @@ const Opportunities = () => {
                 
                 <div className="grid gap-8">
                   {opportunities.map((opp, index) => {
-                    if (!competitionAnalysis || !categoryIntelligence || !trendData || !selectedLocation) {
+                    if (!competitionAnalysis || !categoryIntelligence || !trendData || !bizScoreData || !selectedLocation) {
                       return null;
                     }
                     const forecast = generateForecast(marketData, selectedCategory, opp.bizScore);

@@ -30,6 +30,17 @@ import { generateRiskIndex } from "@/lib/riskIndexEngine";
 import { generateIdeaEnhancements } from "@/lib/ideaEnhancementEngine";
 import { predictBusinessFailure } from "@/lib/failurePredictionEngine";
 
+const getSampleReviewCount = (name: string, distance: number): number => {
+  const seedText = `${name.trim().toLowerCase()}:${distance.toFixed(2)}`;
+  let hash = 2166136261;
+
+  for (let index = 0; index < seedText.length; index += 1) {
+    hash = Math.imul(hash ^ seedText.charCodeAt(index), 16777619);
+  }
+
+  return 50 + ((hash >>> 0) % 151);
+};
+
 const FeasibilityReportPage = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -57,7 +68,7 @@ const FeasibilityReportPage = () => {
         name: c.name,
         distance: c.distance,
         rating: c.rating,
-        reviews: Math.floor(Math.random() * 200) + 50,
+        reviews: getSampleReviewCount(c.name, c.distance),
         visibility: c.rating >= 4.5 ? "High" : c.rating >= 4.0 ? "Medium" : "Low" as "High" | "Medium" | "Low",
         pricing: report.category === "Premium" ? "Premium" : report.category === "Cafe" ? "Mid-Range" : "Budget" as "Budget" | "Mid-Range" | "Premium",
         brandStrength: Math.floor(c.rating * 20),

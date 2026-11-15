@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Navigation from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,21 +31,60 @@ const Opportunities = () => {
   const [opportunities, setOpportunities] = useState<any[]>([]);
   const [marketData, setMarketData] = useState<any>(null);
   const [showResults, setShowResults] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const searchSequence = useRef(0);
+  const skipNextSearch = useRef(false);
 
-  // Handle location search
-  const handleSearchChange = async (value: string) => {
-    setSearchInput(value);
-    if (value.length >= 2) {
-      const results = await searchLocations(value);
-      setSearchResults(results);
-    } else {
+  // Debounce geocoding requests and ignore results from older queries.
+  useEffect(() => {
+    if (skipNextSearch.current) {
+      skipNextSearch.current = false;
       setSearchResults([]);
+      setIsSearching(false);
+      return;
     }
+
+    const query = searchInput.trim();
+    const requestId = ++searchSequence.current;
+
+    if (query.length < 2) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    const timeoutId = window.setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const results = await searchLocations(query);
+        if (requestId === searchSequence.current) {
+          setSearchResults(results);
+        }
+      } catch (error) {
+        console.error("Location search failed:", error);
+        if (requestId === searchSequence.current) {
+          setSearchResults([]);
+        }
+      } finally {
+        if (requestId === searchSequence.current) {
+          setIsSearching(false);
+        }
+      }
+    }, 350);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [searchInput]);
+
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value);
+    setSelectedLocation(null);
+    setShowResults(false);
   };
 
   // Handle location selection
   const handleLocationSelect = (location: LocationData) => {
     setSelectedLocation(location);
+    skipNextSearch.current = true;
     setSearchInput(location.formattedAddress);
     setSearchResults([]);
   };
@@ -91,10 +130,12 @@ const Opportunities = () => {
             <div className="grid md:grid-cols-12 gap-4">
               {/* Location Search */}
               <div className="md:col-span-5">
-                <label className="text-sm font-medium mb-2 block">Location</label>
+                <label htmlFor="opportunity-location" className="text-sm font-medium mb-2 block">Location</label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
+                    id="opportunity-location"
+                    aria-label="Search for a city or address"
                     placeholder="Search city or address worldwide..."
                     value={searchInput}
                     onChange={(e) => handleSearchChange(e.target.value)}
@@ -102,11 +143,17 @@ const Opportunities = () => {
                   />
                   
                   {/* Search Results Dropdown */}
+                  {(isSearching || (searchInput.trim().length >= 2 && searchResults.length === 0)) && (
+                    <p className="mt-2 text-sm text-muted-foreground" role="status" aria-live="polite">
+                      {isSearching ? "Searching locations…" : "No matching locations found."}
+                    </p>
+                  )}
                   {searchResults.length > 0 && (
                     <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
-                      {searchResults.map((result, index) => (
+                      {searchResults.map((result) => (
                         <button
-                          key={index}
+                          type="button"
+                          key={`${result.lat}:${result.lng}`}
                           onClick={() => handleLocationSelect(result)}
                           className="w-full px-4 py-3 text-left hover:bg-muted transition-colors flex items-start gap-3"
                         >

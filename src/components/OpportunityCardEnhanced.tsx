@@ -24,7 +24,6 @@ import { CompetitionAnalysis } from "@/services/competitionScanner";
 import { CategoryIntelligence } from "@/lib/categoryEngine";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 
 interface OpportunityCardEnhancedProps {
   opportunity: OpportunityData;
@@ -59,74 +58,84 @@ const OpportunityCardEnhanced = ({
 }: OpportunityCardEnhancedProps) => {
   const [aiInsight, setAiInsight] = useState<string>("");
   const [isLoadingInsight, setIsLoadingInsight] = useState(false);
-  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("overview");
+  const [hasLoadedInsights, setHasLoadedInsights] = useState(false);
+  const [hasInsightError, setHasInsightError] = useState(false);
 
   useEffect(() => {
-    // Add staggered delay to prevent all opportunities from loading insights simultaneously
-    // This helps avoid rate limiting issues
-    const delay = index * 800; // 800ms between each request
-    const timer = setTimeout(() => {
-      loadAiInsights();
-    }, delay);
+    if (activeTab !== "insights" || hasLoadedInsights) return;
 
-    return () => clearTimeout(timer);
-  }, [opportunity.id, index]);
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      setHasLoadedInsights(true);
+      setIsLoadingInsight(true);
 
-  const loadAiInsights = async () => {
-    setIsLoadingInsight(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-insights', {
-        body: {
-          demandIndex: opportunity.demandIndex,
-          competitionIndex: opportunity.competitionCount,
-          forecastGrowth: forecast.growthRate,
-          populationDensity,
-          bizScoreToday: opportunity.bizScore,
-          bizScore12M: forecast.bizScore12M,
-          trendDirection: forecast.trendDirection,
-          category,
-          title: opportunity.title,
-          competitionDensity: competitionAnalysis.competitionDensity,
-          competitorCount: competitionAnalysis.totalCount,
-          categoryDifficulty: categoryIntelligence.difficulty,
-          opportunityType
+      try {
+        const { data, error } = await supabase.functions.invoke("generate-insights", {
+          body: {
+            demandIndex: opportunity.demandIndex,
+            competitionIndex: opportunity.competitionCount,
+            forecastGrowth: forecast.growthRate,
+            populationDensity,
+            bizScoreToday: opportunity.bizScore,
+            bizScore12M: forecast.bizScore12M,
+            trendDirection: forecast.trendDirection,
+            category,
+            title: opportunity.title,
+            competitionDensity: competitionAnalysis.competitionDensity,
+            competitorCount: competitionAnalysis.totalCount,
+            categoryDifficulty: categoryIntelligence.difficulty,
+            opportunityType,
+          },
+        });
+
+        if (error) throw error;
+        if (!data?.insight || typeof data.insight !== "string") {
+          throw new Error("The insight service returned an empty response.");
         }
-      });
 
-      if (error) throw error;
-      
-      // Check if the response contains user-friendly error message
-      if (data?.userFriendly && data?.error) {
-        setAiInsight(data.insight);
-      } else {
-        setAiInsight(data.insight);
+        if (!cancelled) {
+          setAiInsight(data.insight);
+          setHasInsightError(false);
+        }
+      } catch (error) {
+        console.error("Failed to load AI insights:", error);
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        const userMessage =
+          errorMessage.includes("429") || errorMessage.toLowerCase().includes("rate limit")
+            ? "The AI service is receiving too many requests. Please try again in a moment."
+            : "AI insights are temporarily unavailable. Review the other analysis tabs while the service is unavailable.";
+
+        if (!cancelled) {
+          setAiInsight(userMessage);
+          setHasInsightError(true);
+        }
+      } finally {
+        if (!cancelled) setIsLoadingInsight(false);
       }
-    } catch (error) {
-      console.error("Failed to load AI insights:", error);
-      
-      // More specific error messages
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      let userMessage = "AI insights temporarily unavailable. Please check the metrics above for detailed analysis.";
-      let toastTitle = "Insight Generation Failed";
-      
-      if (errorMessage.includes("429") || errorMessage.includes("rate limit")) {
-        userMessage = "⏳ Too many requests. The AI service is rate limited. Please wait a moment and refresh to try again.";
-        toastTitle = "Rate Limit Reached";
-      } else if (errorMessage.includes("402") || errorMessage.includes("credit")) {
-        userMessage = "💳 AI credits exhausted. Please add credits to your workspace to continue.";
-        toastTitle = "Credits Required";
-      }
-      
-      toast({
-        title: toastTitle,
-        description: userMessage,
-        variant: "destructive"
-      });
-      setAiInsight(userMessage);
-    } finally {
-      setIsLoadingInsight(false);
-    }
-  };
+    }, Math.max(0, index) * 150);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [
+    activeTab,
+    hasLoadedInsights,
+    opportunity.id,
+    opportunity.demandIndex,
+    opportunity.competitionCount,
+    opportunity.bizScore,
+    forecast.growthRate,
+    forecast.bizScore12M,
+    forecast.trendDirection,
+    populationDensity,
+    category,
+    competitionAnalysis,
+    categoryIntelligence,
+    opportunityType,
+    index,
+  ]);
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-success";
@@ -176,7 +185,7 @@ const OpportunityCardEnhanced = ({
       </div>
 
       {/* Tabs for Different Views */}
-      <Tabs defaultValue="overview" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-6 mb-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="forecast">Forecast</TabsTrigger>
@@ -270,10 +279,24 @@ const OpportunityCardEnhanced = ({
                   <div className="h-4 bg-muted animate-pulse rounded w-4/6"></div>
                 </div>
               ) : (
-                <div className="prose prose-sm max-w-none">
-                  <p className="text-sm text-foreground whitespace-pre-line">
-                    {aiInsight}
+                <div className="space-y-3">
+                  <p className="text-sm text-foreground whitespace-pre-line" aria-live="polite">
+                    {aiInsight || "Open this tab to request an AI-generated insight for this opportunity."}
                   </p>
+                  {hasInsightError && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setHasInsightError(false);
+                        setHasLoadedInsights(false);
+                        setAiInsight("");
+                      }}
+                    >
+                      Try again
+                    </Button>
+                  )}
                 </div>
               )}
             </CardContent>

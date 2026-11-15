@@ -55,13 +55,13 @@ export const calculateBizScore = (
     Math.min(100, Math.max(0, Number.isFinite(value) ? value : fallback));
   const safeMarketData: MarketData = {
     ...marketData,
-    demandIndex: clamp(safeMarketData.demandIndex),
-    competitionIndex: clamp(safeMarketData.competitionIndex),
-    competitionCount: Math.max(0, Number.isFinite(safeMarketData.competitionCount) ? safeMarketData.competitionCount : 0),
-    populationDensity: Math.max(0, Number.isFinite(safeMarketData.populationDensity) ? safeMarketData.populationDensity : 0),
-    avgIncome: Math.max(0, Number.isFinite(safeMarketData.avgIncome) ? safeMarketData.avgIncome : 0),
-    internetPenetration: clamp(safeMarketData.internetPenetration),
-    literacyRate: clamp(safeMarketData.literacyRate),
+    demandIndex: clamp(marketData.demandIndex),
+    competitionIndex: clamp(marketData.competitionIndex),
+    competitionCount: Math.max(0, Number.isFinite(marketData.competitionCount) ? marketData.competitionCount : 0),
+    populationDensity: Math.max(0, Number.isFinite(marketData.populationDensity) ? marketData.populationDensity : 0),
+    avgIncome: Math.max(0, Number.isFinite(marketData.avgIncome) ? marketData.avgIncome : 0),
+    internetPenetration: clamp(marketData.internetPenetration),
+    literacyRate: clamp(marketData.literacyRate),
   };
   const safeCompetitionDensityScore = clamp(competitionDensityScore, 50);
   const safeCategoryEaseScore = clamp(categoryEaseScore, 65);
@@ -73,7 +73,6 @@ export const calculateBizScore = (
   const normalizedDensity = Math.min(100, (safeMarketData.populationDensity / 20000) * 100);
   
   // Get category-specific growth rate
-  const growthRate = getAnnualGrowthRate(category);
   const growthPercentage = (safeForecastGrowth) * 100;
   
   // Competition penalty (inverse of density score)
@@ -117,7 +116,7 @@ export const calculateBizScore = (
   
   // Determine impact factors
   const factors = generateImpactFactors(
-    marketData,
+    safeMarketData,
     safeCompetitionDensityScore,
     safeCategoryEaseScore,
     strategicOpportunityIndex
@@ -129,7 +128,7 @@ export const calculateBizScore = (
     competitionScore,
     locationScore,
     economicScore,
-    safeCategoryEaseScore: Math.round(safeCategoryEaseScore),
+    categoryEaseScore: Math.round(safeCategoryEaseScore),
     strategicOpportunityScore: Math.round(strategicOpportunityIndex),
     opportunityType,
     factors,

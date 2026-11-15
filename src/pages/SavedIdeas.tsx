@@ -29,6 +29,7 @@ const SavedIdeas = () => {
   const navigate = useNavigate();
   const [savedIdeas, setSavedIdeas] = useState<SavedIdea[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedForComparison, setSelectedForComparison] = useState<string[]>([]);
 
   useEffect(() => {
@@ -44,6 +45,9 @@ const SavedIdeas = () => {
   }, [user]);
 
   const loadSavedIdeas = async () => {
+    setLoading(true);
+    setLoadError(null);
+
     try {
       const { data, error } = await supabase
         .from("saved_ideas")
@@ -52,8 +56,10 @@ const SavedIdeas = () => {
 
       if (error) throw error;
       setSavedIdeas(data || []);
-    } catch (error: any) {
-      toast.error("Failed to load saved ideas: " + error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      setLoadError(message);
+      toast.error("Failed to load saved ideas: " + message);
     } finally {
       setLoading(false);
     }
@@ -148,7 +154,15 @@ const SavedIdeas = () => {
           )}
         </div>
 
-        {savedIdeas.length === 0 ? (
+        {loadError ? (
+          <Card className="mx-auto max-w-2xl border-destructive/30">
+            <CardContent className="py-10 text-center" role="alert">
+              <h2 className="mb-2 text-lg font-semibold">Your saved ideas could not be loaded</h2>
+              <p className="mb-5 text-sm text-muted-foreground">{loadError}</p>
+              <Button onClick={loadSavedIdeas}>Try again</Button>
+            </CardContent>
+          </Card>
+        ) : savedIdeas.length === 0 ? (
           <Card className="max-w-2xl mx-auto">
             <CardContent className="text-center py-12">
               <Bookmark className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />

@@ -36,9 +36,18 @@ export function generateRecommendation(inputs: RecommendationInputs): Recommenda
     opportunities: [],
     threats: [],
   };
-  const safeFinancials = inputs.financials ?? {
-    breakEvenMonths: 36,
-    profitMargin: { min: 0, max: 0 },
+  const safeFinancials = {
+    breakEvenMonths: Number.isFinite(inputs.financials?.breakEvenMonths)
+      ? Math.max(0, inputs.financials.breakEvenMonths)
+      : 36,
+    profitMargin: {
+      min: Number.isFinite(inputs.financials?.profitMargin?.min)
+        ? inputs.financials.profitMargin.min
+        : 0,
+      max: Number.isFinite(inputs.financials?.profitMargin?.max)
+        ? inputs.financials.profitMargin.max
+        : 0,
+    },
   };
   let score = 0;
   const reasoning: string[] = [];

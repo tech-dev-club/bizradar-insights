@@ -9,11 +9,12 @@ interface HeatmapControlsProps {
 
 const HeatmapControls = ({ activeHeatmap, onHeatmapChange }: HeatmapControlsProps) => {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2" role="group" aria-label="Map layer controls">
       <Button
         variant={activeHeatmap === "demand" ? "default" : "outline"}
         size="sm"
         onClick={() => onHeatmapChange("demand")}
+        aria-pressed={activeHeatmap === "demand"}
         className="gap-2"
       >
         <Map className="w-4 h-4" />
@@ -27,6 +28,7 @@ const HeatmapControls = ({ activeHeatmap, onHeatmapChange }: HeatmapControlsProp
         variant={activeHeatmap === "competition" ? "default" : "outline"}
         size="sm"
         onClick={() => onHeatmapChange("competition")}
+        aria-pressed={activeHeatmap === "competition"}
         className="gap-2"
       >
         <Users className="w-4 h-4" />
@@ -40,6 +42,7 @@ const HeatmapControls = ({ activeHeatmap, onHeatmapChange }: HeatmapControlsProp
         variant={activeHeatmap === "opportunity" ? "default" : "outline"}
         size="sm"
         onClick={() => onHeatmapChange("opportunity")}
+        aria-pressed={activeHeatmap === "opportunity"}
         className="gap-2"
       >
         <Zap className="w-4 h-4" />

@@ -142,7 +142,16 @@ export function buildFeasibilityReport(inputs: ReportInputs): FeasibilityReport 
 
 // Generate unique report ID
 function generateReportId(): string {
-  return `report-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return `report-${crypto.randomUUID()}`;
+  }
+
+  // Fallback for runtimes that do not expose the Web Crypto UUID helper.
+  const randomPart = Array.from({ length: 4 }, () =>
+    Math.floor(Math.random() * 0x10000).toString(16).padStart(4, "0"),
+  ).join("");
+
+  return `report-${Date.now()}-${randomPart}`;
 }
 
 // Export report as JSON

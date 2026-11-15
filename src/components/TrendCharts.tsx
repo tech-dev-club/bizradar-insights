@@ -17,7 +17,11 @@ const TrendCharts = ({ trendData }: TrendChartsProps) => {
   }));
 
   return (
-    <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
+    <div className="space-y-3">
+      <p className="text-xs text-muted-foreground" role="note">
+        Illustrative trend estimates generated from the app's planning assumptions. These lines are not verified historical market data.
+      </p>
+      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
       {/* Demand & Competition Trend */}
       <Card>
         <CardHeader>
@@ -109,6 +113,7 @@ const TrendCharts = ({ trendData }: TrendChartsProps) => {
           </ResponsiveContainer>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 };

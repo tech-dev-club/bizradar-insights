@@ -529,8 +529,14 @@ export function getCategoryIntelligence(categoryId: string): CategoryIntelligenc
     }
   };
 
-  // Return category intelligence or default for unknown categories
-  return categoryMap[categoryId] || {
+  // Resolve category IDs without depending on exact casing or surrounding spaces.
+  const normalizedCategoryId = categoryId.trim().toLowerCase();
+  const matchingCategoryId = Object.keys(categoryMap).find(
+    (key) => key.toLowerCase() === normalizedCategoryId,
+  );
+
+  // Return category intelligence or default for unknown categories.
+  return (matchingCategoryId ? categoryMap[matchingCategoryId] : undefined) || {
     difficulty: "Medium",
     capitalNeed: "Medium",
     operationalComplexity: "Medium",
@@ -565,5 +571,9 @@ export function calculateCategoryEaseScore(difficulty: string): number {
     "High": 45,
     "Very High": 25
   };
-  return difficultyMap[difficulty] || 65;
+  const normalizedDifficulty = difficulty.trim().toLowerCase();
+  const matchingDifficulty = Object.keys(difficultyMap).find(
+    (key) => key.toLowerCase() === normalizedDifficulty,
+  );
+  return matchingDifficulty ? difficultyMap[matchingDifficulty] : 65;
 }

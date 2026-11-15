@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { ArrowLeft, Trophy } from "lucide-react";
+import { ArrowLeft, Trophy, Download } from "lucide-react";
 import { calculateDecisionMatrix } from "@/lib/decisionMatrix";
 import { FeasibilityReport } from "@/lib/reportBuilder";
 
@@ -32,6 +32,38 @@ const Compare = () => {
     }
   }, [user, searchParams]);
 
+  const handleExportCsv = () => {
+    if (!comparisonResult?.ranking?.length) return;
+
+    const escapeCsv = (value: unknown) => {
+      const text = Array.isArray(value) ? value.join("; ") : String(value ?? "");
+      return '"' + text.replace(/"/g, '""') + '"';
+    };
+
+    const rows = [
+      ["Rank", "Location", "Category", "Score", "Label", "Strengths", "Concerns"],
+      ...comparisonResult.ranking.map((item: any) => [
+        item.rank,
+        item.location,
+        item.category,
+        item.score,
+        item.label,
+        item.strengths,
+        item.concerns,
+      ]),
+    ];
+
+    const csv = rows.map((row) => row.map(escapeCsv).join(",")).join("\r\n");
+    const blob = new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "bizradar-comparison-" + new Date().toISOString().slice(0, 10) + ".csv";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  };
   const loadComparison = async () => {
     const ids = Array.from(
       new Set(
@@ -129,7 +161,15 @@ const Compare = () => {
           Back to Saved Ideas
         </Button>
 
-        <h1 className="text-4xl font-bold mb-8">Comparison Dashboard</h1>
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-4xl font-bold">Comparison Dashboard</h1>
+          {comparisonResult && (
+            <Button variant="outline" onClick={handleExportCsv}>
+              <Download className="mr-2 h-4 w-4" aria-hidden="true" />
+              Export CSV
+            </Button>
+          )}
+        </div>
 
         {comparisonResult && (
           <div className="space-y-6">

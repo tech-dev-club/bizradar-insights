@@ -64,10 +64,21 @@ export function generateIdeaEnhancements(
     ],
   };
 
-  betterNiches.push(...(nicheIdeas[category] || nicheIdeas["Retail"]).slice(0, 3));
+  const normalizedCategory = category.trim().toLowerCase();
+  const categoryKey = Object.keys(nicheIdeas).find(
+    (key) => key.toLowerCase() === normalizedCategory,
+  ) ?? "Retail";
+  const safeDemandIndex = Number.isFinite(demandIndex)
+    ? Math.min(100, Math.max(0, demandIndex))
+    : 0;
+  const safeUniqueSellingPoints = Array.isArray(uniqueSellingPoints)
+    ? uniqueSellingPoints.filter((point) => typeof point === "string" && point.trim().length > 0)
+    : [];
+
+  betterNiches.push(...nicheIdeas[categoryKey].slice(0, 3));
 
   // Pricing tweaks
-  if (pricingLevel === "Affordable" && demandIndex >= 70) {
+  if (pricingLevel === "Affordable" && safeDemandIndex >= 70) {
     pricingTweaks.push("Consider 'premium tier' add-on for high-end customers");
     pricingTweaks.push("Introduce membership/loyalty program for repeat customers");
   } else if (pricingLevel === "Premium" && competitionDensity === "High") {
@@ -79,15 +90,15 @@ export function generateIdeaEnhancements(
   }
 
   // Profitable expansions
-  if (category === "Cafe") {
+  if (categoryKey === "Cafe") {
     profitableExpansions.push("Add bakery items for takeaway sales");
     profitableExpansions.push("Launch merchandise (mugs, t-shirts, beans)");
     profitableExpansions.push("Evening transformation: wine bar concept");
-  } else if (category === "Restaurant") {
+  } else if (categoryKey === "Restaurant") {
     profitableExpansions.push("Cloud kitchen for delivery-only brands");
     profitableExpansions.push("Catering services for events and corporates");
     profitableExpansions.push("Packaged sauces/masalas under own brand");
-  } else if (category === "Gym") {
+  } else if (categoryKey === "Gym") {
     profitableExpansions.push("Personal training and nutrition consulting");
     profitableExpansions.push("Online workout programs and app");
     profitableExpansions.push("Supplement and fitness gear retail");
@@ -106,7 +117,7 @@ export function generateIdeaEnhancements(
   }
 
   // USP improvements
-  if (uniqueSellingPoints.length < 3) {
+  if (safeUniqueSellingPoints.length < 3) {
     uspImprovements.push("Add sustainability angle (eco-friendly, zero waste)");
     uspImprovements.push("Introduce convenience features (online ordering, home delivery)");
     uspImprovements.push("Create signature product/service unique to your brand");

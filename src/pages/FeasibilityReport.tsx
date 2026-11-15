@@ -159,9 +159,10 @@ const FeasibilityReportPage = () => {
     if (ideaId) {
       try {
         const { data: ideaData, error } = await supabase
-          .from('custom_ideas')
-          .select('*')
-          .eq('id', ideaId)
+          .from("custom_ideas")
+          .select("*")
+          .eq("id", ideaId)
+          .eq("user_id", user!.id)
           .single();
 
         if (error) throw error;
